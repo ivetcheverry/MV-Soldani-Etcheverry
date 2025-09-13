@@ -12,6 +12,15 @@ void init_regs(int memoria[],int CSsize){
     }
 }
 
+void setSegmentTable(int tabla[][TABLA_M], int CSsize){
+    tabla[0][0]=0;
+    tabla[0][1]=CSsize;
+    tabla[1][0]=CSsize;
+    tabla[1][1]=RAM-CSsize;
+    printf("\n TABLA DE SEGMENTOS: \n %5x | | %5x \n %5x | | %5x",tabla[0][0],tabla[0][1],tabla[1][0],tabla[1][1]);
+}
+
+
 void setCodeSegment(FILE *arch,int memoria[], int size){
     int i,aux;
     for (i=0; i<size; i++){
@@ -21,7 +30,7 @@ void setCodeSegment(FILE *arch,int memoria[], int size){
     }
 }
 
-void validar(int CONTROL[],int *OK, int *CSsize,int memoria[]) {
+void validar(int CONTROL[],int *OK, int *CSsize,int memoria[],int segmentTable[][TABLA_M]) {
     FILE *arch = fopen("sample.vmx","rb");
 
     int aux,i=0;
@@ -45,6 +54,7 @@ void validar(int CONTROL[],int *OK, int *CSsize,int memoria[]) {
                     fread(&aux,1,1,arch);(*CSsize)+=aux;
 
                     setCodeSegment(arch, memoria,*CSsize);
+                    setSegmentTable(segmentTable, *CSsize);
                 }
             }
             fclose(arch);
