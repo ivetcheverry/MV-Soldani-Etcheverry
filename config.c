@@ -1,7 +1,10 @@
-//ARCHIVO CON INICIALIZACIONES,SETTEOS,ETC
+/*EN ESTE ARCHIVO ESTÁ TODO LO RELACIONADO CON EL HEADER, Y SE APROVECHA QUE EL ARCHIVO .VMX ESTA ABIERTO PARA ESCRIBIR EL CODE SEGMENT
+SE ENCUENTRAN VARIAS INICIALIZACIONES Y DECLARACIONES*/
+
+
 #include <stdio.h>
 #include <stdlib.h>
-#include "cons.h"
+#include "const.h"
 //#include "cons.h" //ARCHIVO CON CONSTANTES
 
 
@@ -10,6 +13,8 @@ void init_regs(int memoria[],int CSsize){
     for (;i<CSsize+32;i++){
         memoria[i]=0;
     }
+    memoria[IP]=memoria[CS]=0x0000;
+    memoria[DS]=0x0100;
 }
 
 void setSegmentTable(int tabla[][TABLA_M], int CSsize){
@@ -52,7 +57,6 @@ void validar(int CONTROL[],int *OK, int *CSsize,int memoria[],int segmentTable[]
                     (*OK)=1;
                     fread(&aux,1,1,arch);(*CSsize)+=aux;
                     fread(&aux,1,1,arch);(*CSsize)+=aux;
-
                     setCodeSegment(arch, memoria,*CSsize);
                     setSegmentTable(segmentTable, *CSsize);
                 }
