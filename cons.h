@@ -1,0 +1,2 @@
+// CONSTANTES EN MAYUS
+#define VERSION 1
