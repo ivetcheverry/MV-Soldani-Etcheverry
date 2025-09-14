@@ -5,7 +5,7 @@
 int get(int memoria[], int i, int type) {
     int aux;
     
-        if (type == INST)
+        if (type == INM)
             aux=i;
         else if (type == REG) 
             aux=memoria[i]; 

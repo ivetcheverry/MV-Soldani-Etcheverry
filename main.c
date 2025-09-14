@@ -6,17 +6,10 @@
 //PROTOTIPOS A TODAS LAS FUNCIONES
 void validar(int [],int *, int *, int[], int [][TABLA_M]);
 void init_regs(int [],int);
+int get(int memoria[], int i, int type);
+void set(int memoria[], int i, int type, int valor);
+void ejecucion(int memoria[], int CSsize, tfunc_2op func2[16],tfunc_1op func1[9]);
 
-
-typedef struct tfunc_2op {
-    char nombre[5];
-    void (*tfunc_2Op)(int memoria[],int a,int b, int atype, int btype);//vector con punteros a funciones void con 2 parámetros
-}tfunc_2op ;
-
-typedef struct  tfunc_1op  {
-    char nombre[5];
-    void (*tfunc_1Op)(int memoria[],int a, int atype); //vector con punteros a funciones void con 1 parámetros
-}tfunc_1op ;
 
 
 int main()
@@ -30,7 +23,7 @@ int main()
     validar(CONTROL, &OK, &CSsize, memoria,segmentTable);
     if (OK) {    //VALIDADO
         init_regs(memoria,CSsize);  
-
+        ejecucion(memoria,CSsize,func_2op,func_1op);
     }
     return 0;
 }

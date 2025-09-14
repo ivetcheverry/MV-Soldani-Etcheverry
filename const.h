@@ -1,3 +1,14 @@
+typedef struct tfunc_2op {
+    char nombre[5];
+    void (*func)(int memoria[],int a,int b, int atype, int btype);//vector con punteros a funciones void con 2 parámetros
+}tfunc_2op ;
+
+typedef struct  tfunc_1op  {
+    char nombre[5];
+    void (*func)(int memoria[],int a, int atype); //vector con punteros a funciones void con 1 parámetros
+}tfunc_1op ;
+
+
 // CONSTANTES EN MAYUS
 #define VERSION 1
 #define TABLA_N 2
@@ -5,7 +16,7 @@
 #define RAM 16328
 
 #define REG 1
-#define INST 2
+#define INM 2
 #define MEM 3
 
 
