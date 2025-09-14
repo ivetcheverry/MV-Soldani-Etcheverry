@@ -1,26 +1,24 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
 #include "const.h"
 
-void ejecucion(uint8_t *Mem, uint8_t tamcs, uint8_t *Ip){
-    uint8_t top1, top2, ultimos5, bits_altos, i,j,N,M;
-    uint32_t opc, op1, op2, aux;
+void ejecucion(int memoria[], int CSsize, tfunc_2op func2[16],tfunc_1op func1[9]){
+    int top1, top2, ultimos5, bits_altos, i,j,N,M;
+    int opc, op1, op2, aux;
 
-    i=0;
-    while(i<tamcs){
+    i=memoria[IP];
+    while(i<CSsize){
 
-        bits_altos = (Mem[i] >> 4) & 0x0F; // desplazar 4 bits y enmascarar
-        top2=(bits_altos>>2)&& 0x03;
-        top1=bits_altos && 0x03;                    //obtengo top1 y top2
+        bits_altos = (memoria[i] >> 4) & 0x000F; // desplazar 4 bits y enmascarar
+        top2=(bits_altos>>2)&& 0x0003;
+        top1=bits_altos && 0x0003;                    //obtengo top1 y top2
 
-        if(top1=0){
-            top1=top2;
-            top2=0;
-        }
+        if(top1=0)
+            top1=top2=0;
 
+        //IDENTIFICO TIPOS DE DATOS
         switch (top2){
-            case REG:                       //analizo de que tipo son
+            case REG:                       
                 N=1;
                 break;
             case INM:
@@ -34,49 +32,55 @@ void ejecucion(uint8_t *Mem, uint8_t tamcs, uint8_t *Ip){
                 break;
         }
 
-        op2 = ((uint32_t)N) << 24;
+        memoria[OP2] = ((int)N) << 24;
 
         switch (top1){
-            case reg:
+            case REG:
                 M=1;
                 break;
-            case inmediato:
+            case INM:
                 M=2;
                 break;
-            case memoria:
+            case MEM:
                 M=3;
                 break;
             default:
                 M=0;
                 break;
         }
-        op1 = ((uint32_t)M) << 24;
+        memoria[OP1] = ((int)M) << 24;
+        
+        ultimos5 = memoria[i] & 0x1F;                   //obtengo tipo de operacion y mando a operar
+        memoria[OPC]=ultimos5;
+        
+        if (ultimos5 > 0)
+            if (ultimos5 <= 0x08) // 1 OPERANDO
+                (func1[ultimos5]).func(memoria,op1,N);
+            else if (ultimos5<=0x1f) // 2 OPERANDOS
+                (func2[ultimos5]).func(memoria,op1,op2,N,M);
+                
+            else stop();
 
-        ultimos5 = Mem[i] & 0x1F;                   //obtengo tipo de operacion y mando a operar
-
-        operaciones[ultimos5](top1,top2);
-
-                                            //set operandos
-        opc=ultimos5;                       //me lo lleva directamente a 4 bytes en hexa
+                               //me lo lleva directamente a 4 bytes en hexa
 
 
-        int32_t aux = 0x0;
+        int aux = 0;
 
-        for (int j = 0; j < N; j++) {
+        for (j = 0; j < N; j++) {
             i++;  //avanzo mem
 
             if (j == 0) {
             // primer byte le�do: propagar signo solo si es negativo
-                if ((int8_t)Mem[i] < 0) {
-                    aux = ((int32_t)(int8_t)Mem[i]) << (8 * (N - 1 - j));
+                if ((int)memoria[i] < 0) {
+                    aux = ((int)(int)memoria[i]) << (8 * (N - 1 - j));
                 }
                 else {
-                    aux = ((uint32_t)Mem[i]) << (8 * (N - 1 - j));
+                    aux = ((int)memoria[i]) << (8 * (N - 1 - j));
                 }
             }
             else {
             // resto de bytes: siempre sin signo
-            aux |= ((uint32_t)Mem[i]) << (8 * (N - 1 - j));
+            aux |= ((int)memoria[i]) << (8 * (N - 1 - j));
             }
         }
 
@@ -84,22 +88,22 @@ void ejecucion(uint8_t *Mem, uint8_t tamcs, uint8_t *Ip){
 
 
 
-        int32_t aux = 0x0;
-        for (int j = 0; j < M; j++) {
+        aux = 0;
+        for (j = 0; j < M; j++) {
             i++;  //avanzo mem
 
             if (j == 0) {
             // primer byte le�do: propagar signo solo si es negativo
-                if ((int8_t)Mem[i] < 0) {
-                    aux = ((int32_t)(int8_t)Mem[i]) << (8 * (M - 1 - j));
+                if ((int)memoria[i] < 0) {
+                    aux = ((int)(int)memoria[i]) << (8 * (M - 1 - j));
                 }
                 else {
-                    aux = ((uint32_t)Mem[i]) << (8 * (M - 1 - j));
+                    aux = ((int)memoria[i]) << (8 * (M - 1 - j));
                 }
             }
             else {
             // resto de bytes: siempre sin signo
-            aux |= ((uint32_t)Mem[i]) << (8 * (M - 1 - j));
+            aux |= ((int)memoria[i]) << (8 * (M - 1 - j));
             }
         }
 
@@ -108,22 +112,14 @@ void ejecucion(uint8_t *Mem, uint8_t tamcs, uint8_t *Ip){
 
 
 
-        Mem[Ip]+=((op1 & 0xFF000000)>>24)+((op2 & 0xFF000000)>>24)+0x00000001;    //actualizo Ip
+        memoria[IP]+=((op1 & 0xFF000000)>>24)+((op2 & 0xFF000000)>>24)+0x00000001;    //actualizo Ip
 
         if (top1==3 || top2==3){
-            acceso_mem();
+            acceso_mem(memoria);
         }
 
 
         i++;        //avanzo a sig op
     }
 
-}
-
-//actualizado-2-check
-
-int main()
-{
-    printf("\n");
-    return 0;
 }
