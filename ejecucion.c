@@ -1,19 +1,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "const.h"
+#include "functions.h"
 
 void ejecucion(int memoria[], int CSsize, tfunc_2op func2[16],tfunc_1op func1[9]){
     int top1, top2, ultimos5, bits_altos, i,j,N,M;
     int opc, op1, op2, aux;
 
-    i=memoria[IP];
-    while(i<CSsize){
+    while(memoria[IP]<CSsize){
 
-        bits_altos = (memoria[i] >> 4) & 0x000F; // desplazar 4 bits y enmascarar
+        bits_altos = (memoria[memoria[IP]] >> 4) & 0x000F; // desplazar 4 bits y enmascarar
         top2=(bits_altos>>2)&& 0x0003;
         top1=bits_altos && 0x0003;                    //obtengo top1 y top2
 
-        if(top1=0)
+        if(top1==0)
             top1=top2=0;
 
         //IDENTIFICO TIPOS DE DATOS
@@ -31,8 +31,7 @@ void ejecucion(int memoria[], int CSsize, tfunc_2op func2[16],tfunc_1op func1[9]
                 N=0;
                 break;
         }
-
-        memoria[OP2] = ((int)N) << 24;
+        memoria[OP2] = (N);
 
         switch (top1){
             case REG:
@@ -48,18 +47,17 @@ void ejecucion(int memoria[], int CSsize, tfunc_2op func2[16],tfunc_1op func1[9]
                 M=0;
                 break;
         }
-        memoria[OP1] = ((int)M) << 24;
+        memoria[OP1] = (M);
+
         
-        ultimos5 = memoria[i] & 0x1F;                   //obtengo tipo de operacion y mando a operar
-        memoria[OPC]=ultimos5;
+        memoria[OPC] = memoria[i] & 0x1F;                   //obtengo tipo de operacion y mando a operar
         
-        if (ultimos5 > 0)
-            if (ultimos5 <= 0x08) // 1 OPERANDO
-                (func1[ultimos5]).func(memoria,op1,N);
-            else if (ultimos5<=0x1f) // 2 OPERANDOS
-                (func2[ultimos5]).func(memoria,op1,op2,N,M);
-                
-            else stop();
+        if (memoria[OPC] > 0)
+            if (memoria[OPC] <= 0x08) // 1 OPERANDO
+                (func1[memoria[OPC]-9]).func(memoria,op1,N);
+            else if (memoria[OPC]<=0x1f) // 2 OPERANDOS
+                (func2[memoria[OPC]-16]).func(memoria,op1,op2,N,M);
+                    //else stop();
 
                                //me lo lleva directamente a 4 bytes en hexa
 
@@ -115,7 +113,7 @@ void ejecucion(int memoria[], int CSsize, tfunc_2op func2[16],tfunc_1op func1[9]
         memoria[IP]+=((op1 & 0xFF000000)>>24)+((op2 & 0xFF000000)>>24)+0x00000001;    //actualizo Ip
 
         if (top1==3 || top2==3){
-            acceso_mem(memoria);
+      //      acceso_mem(memoria);
         }
 
 

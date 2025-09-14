@@ -2,13 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "const.h" //ARCHIVO CON CONSTANTES GENERALES
+#include "functions.h"
 
-//PROTOTIPOS A TODAS LAS FUNCIONES
-void validar(int [],int *, int *, int[], int [][TABLA_M]);
-void init_regs(int [],int);
-int get(int memoria[], int i, int type);
-void set(int memoria[], int i, int type, int valor);
-void ejecucion(int memoria[], int CSsize, tfunc_2op func2[16],tfunc_1op func1[9]);
+
 
 
 
@@ -16,6 +12,8 @@ int main()
 {
     tfunc_2op func_2op[16];
     tfunc_1op func_1op[9];
+
+    func_2op[MOV].func= mov;
     int segmentTable[TABLA_N][TABLA_M];
     int OK=0,CSsize=0;
     int memoria[RAM];

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "const.h"
+#include "functions.h"
 
 void add(int memoria[],int a, int b, int atype, int btype){
     if (atype==REG)
@@ -18,4 +19,8 @@ void add(int memoria[],int a, int b, int atype, int btype){
             memoria[memoria[a]]+=memoria[b];
         else //tipo MEMORIA
             memoria[memoria[a]]+=memoria[memoria[b]];
+}
+
+void mov(int memoria[],int a,int b, int atype, int btype){
+    set(memoria,a,atype,get(memoria,b,btype));
 }
