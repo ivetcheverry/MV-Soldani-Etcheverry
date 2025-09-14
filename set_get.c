@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "const.h"
+#include "functions.h"
+
 
 int get(int memoria[], int i, int type) {
     int aux;
@@ -15,9 +17,9 @@ int get(int memoria[], int i, int type) {
     return aux; 
 }
 
-void set(int memoria[], int i, int type, int valor) {
+void set(int memoria[], int i, int type, int nuevovalor) {
     if (type == REG)
-        memoria[i] = valor;
+        memoria[i] = nuevovalor;
     else
-        memoria[memoria[i]] = valor;
+        memoria[memoria[i]] = nuevovalor;
 }
