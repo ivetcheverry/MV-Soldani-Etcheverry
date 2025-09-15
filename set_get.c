@@ -4,22 +4,30 @@
 #include "functions.h"
 
 
-int get(int memoria[], int i, int type) {
+int get(int memoria[], int op1) {
     int aux;
-    
-        if (type == INM)
-            aux=i;
-        else if (type == REG) 
-            aux=memoria[i]; 
-        else
-            aux=memoria[memoria[i]];
+
+    int valor = op1 & 0x00FFFFFF;
+    int tipo = (op1 >> 24) & 0xFF;
+
+        if (tipo == INM)
+            aux=valor;
+        else if (tipo == REG) 
+            aux=memoria[valor]; 
+        else   // CONSULTAR ACCESO MEMORIA
+            aux=memoria[memoria[valor]];
 
     return aux; 
+
 }
 
-void set(int memoria[], int i, int type, int nuevovalor) {
-    if (type == REG)
+
+void set(int memoria[], int op1, int nuevovalor) {
+
+    int tipo = (op1 >> 24) & 0xFF;
+
+    if (tipo == REG)
         memoria[i] = nuevovalor;
-    else
+    else                // CONSULTAR ACCESO MEMORIA
         memoria[memoria[i]] = nuevovalor;
 }

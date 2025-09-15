@@ -21,34 +21,37 @@ typedef struct  tfunc_1op  {
 
 
 //INSTRUCCIONES
-// Instrucciones con dos operandos
-#define MOV   0
-#define ADD   1
-#define SUB   2
-#define MUL   3
-#define DIV   4
-#define CMP   5
-#define SHL   6
-#define SHR   7
-#define SAR   8
-#define AND   9
-#define OR    10
-#define XOR   11
-#define SWAP  12
-#define LDL   13
-#define LDH   14
-#define RND   15
+// Dos operandos
+#define MOV  16
+#define ADD  17
+#define SUB  18
+#define MUL  19
+#define DIV  20
+#define CMP  21
+#define SHL  22
+#define SHR  23
+#define SAR  24
+#define AND  25
+#define OR   26
+#define XOR  27
+#define SWAP 28
+#define LDL  29
+#define LDH  30
+#define RND  31
 
-// Instrucciones con un operando
-#define SYS   0
-#define JMP   1
-#define JZ    2
-#define JP    3
-#define JN    4
-#define JNZ   5
-#define JNP   6
-#define JNN   7
-#define NOT   8
+// Un operando
+#define SYS  0
+#define JMP  1
+#define JZ   2
+#define JP   3
+#define JN   4
+#define JNZ  5
+#define JNP  6
+#define JNN  7
+#define NOT  8
+
+// Sin operandos
+#define STOP 15
 
 //REGISTROS
 // Acceso a memoria

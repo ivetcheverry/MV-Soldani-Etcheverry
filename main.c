@@ -1,163 +1,32 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "const.h"
+#include "const.h" //ARCHIVO CON CONSTANTES GENERALES
 #include "functions.h"
 
-void stop() {
-    printf("STOP ejecutado. Deteniendo la máquina virtual.\n");
-    break;
-}
 
-void JMP (int *memoria, int op1){
-
-    memoria[Ip]= get(memoria, op1 & 0x00FFFFFF ,(op1 >> 24) & 0xFF);
-}
-
-void JZ (int *memoria, int op1, int CC){
-    uint8_t aux;
-
-    aux= (CC >> 30) & 0b01;
-    if (aux==1)
-        memoria[Ip]=get(memoria, op1 & 0x00FFFFFF ,(op1 >> 24) & 0xFF);
-}
-
-void JNZ (int *memoria, int op1, int CC){
-    uint8_t aux;
-
-    aux= (CC >> 30) & 0b01;
-    if (aux==0)
-        memoria[Ip]=get(memoria, op1 & 0x00FFFFFF ,(op1 >> 24) & 0xFF);
-}
-
-void JN (int *memoria, int op1, int CC){
-    uint8_t aux;
-
-    aux= (CC >> 31) & 0b1;
-    if (aux==1)
-        memoria[Ip]=get(memoria, op1 & 0x00FFFFFF ,(op1 >> 24) & 0xFF);
-}
-
-void JNN (int *memoria, int op1, int CC){
-    uint8_t aux;
-
-    aux= (CC >> 31) & 0b1;
-    if (aux==0)
-        memoria[Ip]=get(memoria, op1 & 0x00FFFFFF ,(op1 >> 24) & 0xFF);
-}
-
-void JP (int *memoria, int op1, int CC){
-    uint8_t aux;
-
-    aux= (CC >> 31) & 0b1;
-    if (aux==0)
-        memoria[Ip]=get(memoria, op1 & 0x00FFFFFF ,(op1 >> 24) & 0xFF);
-}
-
-void JNP (int *memoria, int op1, int CC){
-    uint8_t aux;
-
-    aux= (CC >> 31) & 0b1;
-    if (aux==1)
-        memoria[Ip]=get(memoria, op1 & 0x00FFFFFF ,(op1 >> 24) & 0xFF);
-}
-
-void not (int *memoria, int op1, int CC){
-    memoria[op1 & 0x00FFFFFF]= ~get(memoria, op1 & 0x00FFFFFF ,(op1 >> 24) & 0xFF);
-}
-
-void mov(int memoria[],int a,int b, int atype, int btype){
-    set(memoria,a,atype,get(memoria,b,btype));
-}
-
-void add(int memoria[],int a, int b, int atype, int btype){
-    if (atype==REG)
-        if (btype==INM) //tipo INSTANTANEO
-            memoria[a]+=b;
-        else if (btype==REG) //tipo REGISTRO
-            memoria[a]+=memoria[b];
-        else //tipo MEMORIA
-            memoria[a]+=memoria[memoria[b]];
-
-    else //es tipo Memoria
-        if (btype==INM) //tipo INSTANTANEO
-            memoria[memoria[a]]+=b;
-        else if (btype==REG) //tipo REGISTRO
-            memoria[memoria[a]]+=memoria[b];
-        else //tipo MEMORIA
-            memoria[memoria[a]]+=memoria[memoria[b]];
-}
-
-void sub (int memoria[],int a, int b, int atype, int btype){
-    int v1, v2;
-
-    v1=get(memoria, a & 0x00FFFFFF ,(a >> 24) & 0xFF);
-    v2=get(memoria, b & 0x00FFFFFF ,(b >> 24) & 0xFF);
-    set(memoria,a,atype, v1-v2);
-}
-
-void mul (int memoria[],int a, int b, int atype, int btype){
-    int v1, v2;
-
-    v1=get(memoria, a & 0x00FFFFFF ,(a >> 24) & 0xFF);
-    v2=get(memoria, b & 0x00FFFFFF ,(b >> 24) & 0xFF);
-    set(memoria,a,atype, v1*v2);
-}
-
-void div (int memoria[],int a, int b, int atype, int btype){
-    int v1, v2, result;
-
-    v1=get(memoria, a & 0x00FFFFFF ,(a >> 24) & 0xFF);
-    v2=get(memoria, b & 0x00FFFFFF ,(b >> 24) & 0xFF);
-    if(v2!=0){
-        result=(int)(v1/v2);
-        set(memoria,a & 0x00FFFFFF,atype, result);
-        set(memoria,16,1,(double)(v1/v2)-result)                                  //resto en AC
-    }
-    else{
-        printf("Error, division por 0");
-        break;
-    }
-}
-
-void cmp (int memoria[],int a, int b, int atype, int btype){
-    int v1, v2, result;
-
-    v1=get(memoria, a & 0x00FFFFFF ,(a >> 24) & 0xFF);
-    v2=get(memoria, b & 0x00FFFFFF ,(b >> 24) & 0xFF);
-
-    v1-=v2;
-    if(v1==0){                                                  //actualizo CC
-        memoria[17]|= 1u << 30;
-    }
-    else{
-        memoria[17]&= ~(1u << 30);
-    }
-    if(v1<0){
-        memoria[17] |= (1u << 31);
-    }
-    else{
-        &= ~(1u << 31);
-    }
-}
-
-void shl (int memoria[],int a, int b, int atype, int btype){
-    int v2;
-
-    v2=get(memoria, b & 0x00FFFFFF ,(b >> 24) & 0xFF);
-    memoria[a & 0x00FFFFFF ]=memoria[a & 0x00FFFFFF ]<<v2;
-}
-
-void shr (int memoria[],int a, int b, int atype, int btype){
-    int v2;
-
-    v2=get(memoria, b & 0x00FFFFFF ,(b >> 24) & 0xFF);
-    memoria[a & 0x00FFFFFF ]=memoria[a & 0x00FFFFFF ]>>v2;
-}
+//PROTOTIPOS A TODAS LAS FUNCIONES
+void validar(int [],int *, int *, int[], int [][TABLA_M]);
+void init_regs(int [],int);
+int get(int memoria[], int i, int type);
+void set(int memoria[], int i, int type, int valor);
+void ejecucion(int memoria[], int CSsize, tfunc_2op func2[16],tfunc_1op func1[9]);
 
 
 
 int main()
 {
-    printf("Hello world!\n");
+    tfunc_2op func_2op[16];
+    tfunc_1op func_1op[9];
+
+    func_2op[MOV].func= mov;
+    int segmentTable[TABLA_N][TABLA_M];
+    int OK=0,CSsize=0;
+    int memoria[RAM];
+    int CONTROL[] = { 'V','M','X','2','5' };
+    validar(CONTROL, &OK, &CSsize, memoria,segmentTable);
+    if (OK) {    //VALIDADO
+        init_regs(memoria,CSsize);  
+        ejecucion(memoria,CSsize,func_2op,func_1op);
+    }
     return 0;
 }
