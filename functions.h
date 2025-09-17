@@ -1,14 +1,51 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include "const.h"
 
 //PROTOTIPOS A TODAS LAS FUNCIONES
-void validar(int [],int *, int *, int[], int [][TABLA_M]);
-void init_regs(int [],int);
-int get(int memoria[], int i, int type);
-void set(int memoria[], int i, int type, int valor);
-void ejecucion(int memoria[], int CSsize, tfunc_2op func2[16],tfunc_1op func1[9]);
-void mov(int memoria[],int a,int b, int atype, int btype);
-void add(int memoria[],int a, int b, int atype, int btype);
-int get(int memoria[], int i, int type);
-void set(int memoria[], int i, int type, int nuevovalor);
+
+void mostrar(tMV *MV, int OPA, int OPB);
+
+void init_MV(tMV *MV, int *OK, int CONTROL[], int VERSION);
+
+void setSegmentTable(tMV *MV);
+void setCodeSegment(FILE *arch,tMV *MV);
+
+void init_regs(tMV *MV);
+void init_funciones(tMV *MV);
+void ejecucion(tMV *MV);
+
+int get(tMV *MV, int OP);
+void set(tMV *MV, int OP, int valorNuevo);
+void setCC(tMV *MV, int ultvalor);
+
+void sys(tMV *MV);
+void jmp(tMV *MV);
+void jz(tMV *MV);
+void jnz(tMV *MV);
+void jn_(tMV *MV);
+void jnn(tMV *MV);
+void jp(tMV *MV);
+void jnp(tMV *MV);
+void not_(tMV *MV);
+
+void mov(tMV *MV);
+void add(tMV *MV);
+void sub(tMV *MV);
+void mul(tMV *MV);
+void div_(tMV *MV);
+void cmp(tMV *MV);
+void shl(tMV *MV);
+void shr(tMV *MV);
+
+void stop(tMV *MV);
+
+void sar(tMV *MV);
+void and(tMV *MV);
+void or(tMV *MV);
+void xor(tMV *MV);
+void swap(tMV *MV);
+void ldl(tMV *MV);
+void ldh(tMV *MV);
+void rnd(tMV *MV);

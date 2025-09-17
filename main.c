@@ -4,29 +4,18 @@
 #include "functions.h"
 
 
-//PROTOTIPOS A TODAS LAS FUNCIONES
-void validar(int [],int *, int *, int[], int [][TABLA_M]);
-void init_regs(int [],int);
-int get(int memoria[], int i, int type);
-void set(int memoria[], int i, int type, int valor);
-void ejecucion(int memoria[], int CSsize, tfunc_2op func2[16],tfunc_1op func1[9]);
-
-
-
 int main()
 {
-    tfunc_2op func_2op[16];
-    tfunc_1op func_1op[9];
-
-    func_2op[MOV].func= mov;
-    int segmentTable[TABLA_N][TABLA_M];
-    int OK=0,CSsize=0;
-    int memoria[RAM];
+    tMV MV;
+    int VERSION = 1;
     int CONTROL[] = { 'V','M','X','2','5' };
-    validar(CONTROL, &OK, &CSsize, memoria,segmentTable);
+    int OK=0;
+    init_MV(&MV, &OK, CONTROL,VERSION);
     if (OK) {    //VALIDADO
-        init_regs(memoria,CSsize);  
-        ejecucion(memoria,CSsize,func_2op,func_1op);
+        init_regs(&MV);  
+        init_funciones(&MV);
+        printf("\n\n-EJECUCION!--------------------\n");
+        ejecucion(&MV);
     }
     return 0;
 }

@@ -1,23 +1,41 @@
-typedef struct tfunc_2op {
-    char nombre[5];
-    void (*func)(int memoria[],int a,int b, int atype, int btype);//vector con punteros a funciones void con 2 parámetros
-}tfunc_2op ;
-
-typedef struct  tfunc_1op  {
-    char nombre[5];
-    void (*func)(int memoria[],int a, int atype); //vector con punteros a funciones void con 1 parámetros
-}tfunc_1op ;
-
-
 // CONSTANTES EN MAYUS
-#define VERSION 1
+
 #define TABLA_N 2
 #define TABLA_M 2
+#define NMASK 0x8000
 #define RAM 16328
 
 #define REG 1
 #define INM 2
 #define MEM 3
+
+
+struct tMV;
+
+typedef struct tfunc {
+    char nombre[5];
+    void (*func)(struct tMV *);//vector con punteros a funciones
+}tfunc;
+
+typedef struct treg{
+    char nombre[5];
+    int dato;
+}treg;
+
+typedef struct tMV {
+    int CSsize;
+    int SEGMENTTABLE[TABLA_N][TABLA_M];
+
+    int MEMORIA[RAM];
+    tfunc FUNCIONES[26];
+    treg REGS[32];
+}tMV;
+
+
+
+
+#define RMASK 0xFF000000 //mascara para obtener tipo de los OP1 y OP2
+#define AMASK 0x0FFF; //mascara para obtener valor de los OP1 y OP2
 
 
 //INSTRUCCIONES
@@ -26,7 +44,7 @@ typedef struct  tfunc_1op  {
 #define ADD  17
 #define SUB  18
 #define MUL  19
-#define DIV  20
+#define DIV_  20
 #define CMP  21
 #define SHL  22
 #define SHR  23
@@ -44,11 +62,11 @@ typedef struct  tfunc_1op  {
 #define JMP  1
 #define JZ   2
 #define JP   3
-#define JN   4
+#define JN_  4
 #define JNZ  5
-#define JNP  6
+#define JNP 6
 #define JNN  7
-#define NOT  8
+#define NOT_  8
 
 // Sin operandos
 #define STOP 15

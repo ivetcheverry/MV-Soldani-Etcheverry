@@ -1,155 +1,238 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "const.h"
 #include "functions.h"
 #include <time.h>
 
-void stop(int memoria[]) {
-    printf("STOP ejecutado. Deteniendo la máquina virtual.\n");
-    memoria[IP]=-1;
-    break;
-}
-void jmp (int *memoria, int op1){
-    memoria[IP]= get(memoria, op1 & 0x00FFFFFF ,(op1 >> 24) & 0xFF);
-}
+void mostrar(tMV *MV, int OPA, int OPB){
+    int t1,t2,r,off;
+    t1=t2=r=off=0;
 
-void jz (int *memoria, int op1){
-    uint8_t aux;
-    aux= (memoria[CC] >> 30) & 0b01;
-    if (aux==1)
-        memoria[IP]=get(memoria, op1 & 0x00FFFFFF,(op1 >> 24) & 0xFF);
-}
+    t1 = OPA>>24;
+    t2 = OPB>>24;
 
-void jnz (int *memoria, int op1){
-    uint8_t aux;
+    if (t1==MEM){
+        r = (OPA>>16) & 0xFF;
+        off=OPA&0xFFFF;
+        printf("  [%s+%d], ",MV->REGS[r].nombre,off);
+    }
+    else if (t1==REG){
+        r=OPA&0XFF;
+        printf("  %s, ",MV->REGS[r].nombre);
+    }
+    else
+        printf("  %d  ",OPA&0XFF);
 
-    aux= (memoria[CC] >> 30) & 0b01;
-    if (aux==0)
-        memoria[IP]=get(memoria, op1 & 0x00FFFFFF ,(op1 >> 24) & 0xFF);
-}
 
-void jn (int *memoria, int op1){
-    uint8_t aux;
-
-    aux= (memoria[CC] >> 31) & 0b1;
-    if (aux==1)
-        memoria[IP]=get(memoria, op1 & 0x00FFFFFF ,(op1 >> 24) & 0xFF);
-}
-
-void jnn (int *memoria, int op1){
-    uint8_t aux;
-    aux= (memoria[CC] >> 31) & 0b1;
-    if (aux==0)
-        memoria[IP]=get(memoria, op1 & 0x00FFFFFF ,(op1 >> 24) & 0xFF);
-}
-
-void jp (int *memoria, int op1){
-    uint8_t aux;
-
-    aux= (memoria[CC] >> 31) & 0b1;
-    if (aux==0)
-        memoria[IP]=get(memoria, op1 & 0x00FFFFFF ,(op1 >> 24) & 0xFF);
+    if (t2==MEM){
+        r = (OPB>>16)&0x1F;
+        off=OPB&0xFFFF;
+        printf("  [%s+%d], ",MV->REGS[r].nombre,off);
+    }
+    else if (t2==REG){
+        r=OPB&0X1F;
+        printf("  %s ",MV->REGS[r].nombre);
+    }
+    else { //INMEDIATO
+        r = OPB&0XFFFF;
+        if (r & 0b1000000)
+        r= (r ^ NMASK) - NMASK; 
+        printf("  %d  ",r);
+    }
+        
+    
 }
 
-void JNP (int *memoria, int op1){
-    uint8_t aux;
+/*void (tMV *MV, int OP){
 
-    aux= (memoria[CC] >> 31) & 0b1;
-    if (aux==1)
-        memoria[IP]=get(memoria, op1 & 0x00FFFFFF ,(op1 >> 24) & 0xFF);
-}
 
-void not (int *memoria, int op1, int CC){
-    memoria[op1 & 0x00FFFFFF]= ~get(memoria, op1 & 0x00FFFFFF ,(op1 >> 24) & 0xFF);
-}
+}*/
 
-void mov(int memoria[],int a,int b, int atype, int btype){
-    set(memoria,a,atype,get(memoria,b,btype));
+
+// SIN OPERANDOS ---------------------------------------------------------------
+void stop(tMV *MV) {
+    printf("\n\n STOP ejecutado. Deteniendo la máquina virtual.");
+    MV->REGS[IP].dato =-1;
 }
 
 
-//CAMBIAR 
-void add(int memoria[],int a, int b, int atype, int btype){
-    if (atype==REG)
-        if (btype==INM) //tipo INSTANTANEO
-            memoria[a]+=b;
-        else if (btype==REG) //tipo REGISTRO
-            memoria[a]+=memoria[b];
-        else //tipo MEMORIA
-            memoria[a]+=memoria[memoria[b]];
+// 1 OPERANDO ------------------------------------------------------------------
+void sys(tMV *MV){
+    int f,valor,formato;
+    char binario[33];
 
-    else //es tipo Memoria
-        if (btype==INM) //tipo INSTANTANEO
-            memoria[memoria[a]]+=b;
-        else if (btype==REG) //tipo REGISTRO
-            memoria[memoria[a]]+=memoria[b];
-        else //tipo MEMORIA
-            memoria[memoria[a]]+=memoria[memoria[b]];
+    valor=0;
+    f = get(MV,MV->REGS[OP2].dato);
+    formato = MV->REGS[EAX].dato&0XFF;
+
+    if (f==1){ //READ   
+        printf("INGRESAR VALOR: "); 
+        if (formato==1)
+            scanf("%d",&valor);
+        else if (formato==2)
+            scanf("%c",&valor);
+        else if (formato==4)
+            scanf("%o",&valor);
+        else if (formato==8)
+            scanf("%x",&valor);
+        else {
+            scanf("%s",binario);
+            for (int i=strlen(binario)-1 ; i>=0 ; i--){
+                valor=valor<<1;
+                valor|=binario[i]-'0';
+            }
+        }
+    set(MV,MV->MEMORIA[MV->REGS[EDX].dato],valor);
+    }  
+    else { //WRITE
+        valor=get(MV,MV->REGS[EDX].dato);
+        if (formato==1)
+            printf("%d",valor);
+        else if (formato==2)
+            printf("%c",valor);
+        else if (formato==4)
+            printf("%o",valor);
+        else if (formato==8)
+            printf("%x",valor);
+        else { //ESCRIBIR BINARIO
+            int i=32;
+            while (valor > 0 && i > 0) {
+            i--;
+            binario[i] = (valor & 1) ? '1' : '0';
+            valor = valor >> 1;
+        }
+        printf("0b%s", &binario[i]);
+        }
+
+    }
+    
+
 }
 
-void sub (int memoria[],int a, int b, int atype, int btype){
+
+void jmp(tMV *MV){
+    MV->REGS[IP].dato=get(MV, MV->REGS[OP2].dato);
+}
+
+void jz (tMV *MV){
+    int Z = (MV->REGS[CC].dato >> 30) & 0b1 ; 
+    if (Z & 1)
+       MV->REGS[IP].dato=get(MV, MV->REGS[OP2].dato);
+}
+
+void jnz (tMV *MV){
+    int Z = ((MV->REGS[CC].dato >> 30) & 1); 
+    printf("\n Z: %d \n",Z);
+    printf("\nCC: %x \n",MV->REGS[CC].dato);
+
+    if (!(Z & 1))
+       MV->REGS[IP].dato=get(MV, MV->REGS[OP2].dato);
+}
+
+void jn_ (tMV *MV){
+    int N = (MV->REGS[CC].dato >> 31) & 0b1 ; 
+    if (N & 1)
+       MV->REGS[IP].dato=get(MV, MV->REGS[OP2].dato);
+}
+
+void jnn (tMV *MV){
+    int N = (MV->REGS[CC].dato >> 31) & 0b1 ; 
+    if (!(N & 1))
+       MV->REGS[IP].dato=get(MV, MV->REGS[OP2].dato);
+}
+
+void jp (tMV *MV){
+    int N = (MV->REGS[CC].dato >> 31) & 0b1 ; 
+    if (!(N & 1))
+       MV->REGS[IP].dato=get(MV, MV->REGS[OP2].dato);
+}
+
+void jnp (tMV *MV){
+    int N = (MV->REGS[CC].dato >> 31) & 0b1 ; 
+    if (N & 1)
+       MV->REGS[IP].dato=get(MV, MV->REGS[OP2].dato);
+}
+
+void not_(tMV *MV){
+    set(MV, MV->REGS[OP2].dato, ~ MV->REGS[OP2].dato);
+
+    setCC(MV,get(MV,MV->REGS[OP2].dato));
+}
+
+
+// 2 OPERANDOS -----------------------------------------------------------------
+
+void mov(tMV *MV){
+    set(MV,MV->REGS[OP1].dato ,get(MV,MV->REGS[OP2].dato));
+}
+
+
+void add(tMV *MV){
+    int suma;
+    suma = get(MV,MV->REGS[OP1].dato)+get(MV,MV->REGS[OP2].dato);
+    set(MV,MV->REGS[OP1].dato,suma);
+
+    setCC(MV,get(MV,MV->REGS[OP1].dato));
+}
+
+void sub (tMV *MV){
+    int resta;
+    resta = get(MV,MV->REGS[OP1].dato)-get(MV,MV->REGS[OP2].dato);
+    set(MV,MV->REGS[OP1].dato,resta);
+
+    setCC(MV,get(MV,MV->REGS[OP1].dato));
+}
+
+void mul (tMV *MV){
     int v1, v2;
+    v1 = get(MV,MV->REGS[OP1].dato);
+    v2 = get(MV,MV->REGS[OP2].dato);
+    set(MV,MV->REGS[OP1].dato,v1*v2);
 
-    v1=get(memoria, a & 0x00FFFFFF ,(a >> 24) & 0xFF);
-    v2=get(memoria, b & 0x00FFFFFF ,(b >> 24) & 0xFF);
-    set(memoria,a,atype, v1-v2);
+    setCC(MV,get(MV,MV->REGS[OP1].dato));
 }
 
-void mul (int memoria[],int a, int b, int atype, int btype){
-    int v1, v2;
+void div_(tMV *MV){
+    int v1,v2;
 
-    v1=get(memoria, a & 0x00FFFFFF ,(a >> 24) & 0xFF);
-    v2=get(memoria, b & 0x00FFFFFF ,(b >> 24) & 0xFF);
-    set(memoria,a,atype, v1*v2);
-}
+    v1 = get(MV,MV->REGS[OP1].dato);
+    v2 = get(MV,MV->REGS[OP2].dato);
 
-void div (int memoria[],int a, int b, int atype, int btype){
-    int v1, v2, result;
-
-    v1=get(memoria, a & 0x00FFFFFF ,(a >> 24) & 0xFF);
-    v2=get(memoria, b & 0x00FFFFFF ,(b >> 24) & 0xFF);
     if(v2!=0){
-        result=(int)(v1/v2);
-        set(memoria,a & 0x00FFFFFF,atype, result);
-        set(memoria,16,1,(double)(v1/v2)-result)                                  //resto en AC
+        set(MV,MV->REGS[MBR].dato, v1 / v2);
+        set(MV,MV->REGS[AC].dato, v1 % v2);   //resto en AC
+
+        setCC(MV,get(MV,MV->REGS[MBR].dato));
     }
-    else{
+    else
         printf("Error, division por 0");
-        break;
-    }
+    
 }
 
-void cmp (int memoria[],int a, int b, int atype, int btype){
+void cmp (tMV *MV){
     int v1, v2, result;
 
-    v1=get(memoria, a & 0x00FFFFFF ,(a >> 24) & 0xFF);
-    v2=get(memoria, b & 0x00FFFFFF ,(b >> 24) & 0xFF);
+    v1 = get(MV,MV->REGS[OP1].dato);
+    v2 = get(MV,MV->REGS[OP2].dato);
 
-    v1-=v2;
-    if(v1==0){                                                  //actualizo CC
-        memoria[17]|= 1u << 30;
-    }
-    else{
-        memoria[17]&= ~(1u << 30);
-    }
-    if(v1<0){
-        memoria[17] |= (1u << 31);
-    }
-    else{
-        &= ~(1u << 31);
-    }
+    setCC(MV,v1-v2);
+    
 }
 
-void shl (int memoria[],int a, int b, int atype, int btype){
+void shl (tMV *MV){
     int v2;
 
-    v2=get(memoria, b & 0x00FFFFFF ,(b >> 24) & 0xFF);
-    memoria[a & 0x00FFFFFF ]=memoria[a & 0x00FFFFFF ]<<v2;
+    v2 = get(MV,MV->REGS[OP2].dato);
+
+    set(MV,MV->REGS[OP1].dato, (get(MV,MV->REGS[OP1].dato)<<v2 ) );
 }
 
-void shr (int memoria[],int a, int b, int atype, int btype){
+void shr (tMV *MV){
     int v2;
 
-    v2=get(memoria, b & 0x00FFFFFF ,(b >> 24) & 0xFF);
-    memoria[a & 0x00FFFFFF ]=memoria[a & 0x00FFFFFF ]>>v2;
+    v2 = get(MV,MV->REGS[OP2].dato);
+
+    set(MV,MV->REGS[OP1].dato, (get(MV,MV->REGS[OP1].dato)>>v2 ) );
 }
+    
