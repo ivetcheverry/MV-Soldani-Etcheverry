@@ -27,7 +27,7 @@ typedef struct tMV {
     int SEGMENTTABLE[TABLA_N][TABLA_M];
 
     int MEMORIA[RAM];
-    tfunc FUNCIONES[26];
+    tfunc FUNCIONES[32];
     treg REGS[32];
 }tMV;
 
@@ -64,9 +64,9 @@ typedef struct tMV {
 #define JP   3
 #define JN_  4
 #define JNZ  5
-#define JNP 6
+#define JNP  6
 #define JNN  7
-#define NOT_  8
+#define NOT_ 8
 
 // Sin operandos
 #define STOP 15

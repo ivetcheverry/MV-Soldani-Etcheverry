@@ -10,45 +10,45 @@ SE ENCUENTRAN VARIAS INICIALIZACIONES Y DECLARACIONES*/
 
 
 void init_funciones(tMV *MV){
-  tfunc *f = MV->FUNCIONES;
-  strcpy(f[SYS].nombre,  "SYS");   f[SYS].func  = sys;
-  strcpy(f[JMP].nombre,  "JMP");   f[JMP].func  = jmp;
-  strcpy(f[JZ].nombre,   "JZ");    f[JZ].func   = jz;
-  strcpy(f[JP].nombre,   "JP");    f[JP].func   = jp;
-  strcpy(f[JN_].nombre,   "JN");   f[JN_].func   = jn_;
-  strcpy(f[JNZ].nombre,  "JNZ");   f[JNZ].func  = jnz;
-  strcpy(f[JNP].nombre,  "JNP");   f[JNP].func  = jnp;
-  strcpy(f[JNN].nombre,  "JNN");   f[JNN].func  = jnn;
-  strcpy(f[NOT_].nombre, "NOT");   f[NOT_].func = not_;
+  strcpy(MV->FUNCIONES[SYS].nombre,  "SYS");   MV->FUNCIONES[SYS].func  = sys;
+  strcpy(MV->FUNCIONES[JMP].nombre,  "JMP");   MV->FUNCIONES[JMP].func  = jmp;
+  strcpy(MV->FUNCIONES[JZ].nombre,   "JZ");    MV->FUNCIONES[JZ].func   = jz;
+  strcpy(MV->FUNCIONES[JP].nombre,   "JP");    MV->FUNCIONES[JP].func   = jp;
+  strcpy(MV->FUNCIONES[JN_].nombre,   "JN");   MV->FUNCIONES[JN_].func   = jn_;
+  strcpy(MV->FUNCIONES[JNZ].nombre,  "JNZ");   MV->FUNCIONES[JNZ].func  = jnz;
+  strcpy(MV->FUNCIONES[JNP].nombre,  "JNP");   MV->FUNCIONES[JNP].func  = jnp;
+  strcpy(MV->FUNCIONES[JNN].nombre,  "JNN");   MV->FUNCIONES[JNN].func  = jnn;
+  strcpy(MV->FUNCIONES[NOT_].nombre, "NOT");   MV->FUNCIONES[NOT_].func = not_;
 
-  strcpy(f[STOP].nombre, "STOP");  f[STOP].func = stop;
+  strcpy(MV->FUNCIONES[STOP].nombre, "STOP");  MV->FUNCIONES[STOP].func = stop;
 
-  strcpy(f[MOV].nombre,  "MOV");   f[MOV].func  = mov;
-  strcpy(f[ADD].nombre,  "ADD");   f[ADD].func  = add;
-  strcpy(f[SUB].nombre,  "SUB");   f[SUB].func  = sub;
-  strcpy(f[MUL].nombre,  "MUL");   f[MUL].func  = mul;
-  strcpy(f[DIV_].nombre, "DIV");   f[DIV_].func  = div_;
-  strcpy(f[CMP].nombre,  "CMP");   f[CMP].func  = cmp;
-  strcpy(f[SHL].nombre,  "SHL");   f[SHL].func  = shl;
-  strcpy(f[SHR].nombre,  "SHR");   f[SHR].func  = shr;
- /* strcpy(f[SAR].nombre,  "SAR");   f[SAR].func  = sar;
-  strcpy(f[AND].nombre,  "AND");   f[AND].func  = and;
-  strcpy(f[OR].nombre,   "OR");    f[OR].func   = or;
-  strcpy(f[XOR].nombre,  "XOR");   f[XOR].func  = xor;
-  strcpy(f[SWAP].nombre, "SWAP");  f[SWAP].func = swap;
-  strcpy(f[LDL].nombre,  "LDL");   f[LDL].func  = ldl;
-  strcpy(f[LDH].nombre,  "LDH");   f[LDH].func  = ldh;
-  strcpy(f[RND].nombre,  "RND");   f[RND].func  = rnd;*/
+  strcpy(MV->FUNCIONES[MOV].nombre,  "MOV");   MV->FUNCIONES[MOV].func  = mov;
+  strcpy(MV->FUNCIONES[ADD].nombre,  "ADD");   MV->FUNCIONES[ADD].func  = add;
+  strcpy(MV->FUNCIONES[SUB].nombre,  "SUB");   MV->FUNCIONES[SUB].func  = sub;
+  strcpy(MV->FUNCIONES[MUL].nombre,  "MUL");   MV->FUNCIONES[MUL].func  = mul;
+  strcpy(MV->FUNCIONES[DIV_].nombre, "DIV");   MV->FUNCIONES[DIV_].func  =div_;
+  strcpy(MV->FUNCIONES[CMP].nombre,  "CMP");   MV->FUNCIONES[CMP].func  = cmp;
+  strcpy(MV->FUNCIONES[SHL].nombre,  "SHL");   MV->FUNCIONES[SHL].func  = shl;
+  strcpy(MV->FUNCIONES[SHR].nombre,  "SHR");   MV->FUNCIONES[SHR].func  = shr;
+  strcpy(MV->FUNCIONES[SAR].nombre,  "SAR");   MV->FUNCIONES[SAR].func  = sar;
+  strcpy(MV->FUNCIONES[AND].nombre,  "AND");   MV->FUNCIONES[AND].func  = and;
+  strcpy(MV->FUNCIONES[OR].nombre,   "OR");    MV->FUNCIONES[OR].func   = or;
+  strcpy(MV->FUNCIONES[XOR].nombre,  "XOR");   MV->FUNCIONES[XOR].func  = xor;
+  strcpy(MV->FUNCIONES[SWAP].nombre, "SWAP");  MV->FUNCIONES[SWAP].func = swap;
+  strcpy(MV->FUNCIONES[LDL].nombre,  "LDL");   MV->FUNCIONES[LDL].func  = ldl;
+  strcpy(MV->FUNCIONES[LDH].nombre,  "LDH");   MV->FUNCIONES[LDH].func  = ldh;
+  strcpy(MV->FUNCIONES[RND].nombre,  "RND");   MV->FUNCIONES[RND].func  = rnd;
+
 }
 
 
 void init_regs(tMV *MV){
     int i;
-    for (i=0;i<32;i++){
+    for (i=0;i<32;i++)
         MV->REGS[i].dato=0;
-    }
-    MV->REGS[IP].dato = MV->REGS[CS].dato=MV->SEGMENTTABLE[0][0];
+    MV->REGS[IP].dato = MV->REGS[CS].dato = MV->SEGMENTTABLE[0][0];
     MV->REGS[DS].dato = MV->SEGMENTTABLE[1][0];
+    MV->REGS[IP].dato = MV->SEGMENTTABLE[0][0];
 
     strcpy(MV->REGS[LAR].nombre, "LAR");
     strcpy(MV->REGS[MAR].nombre, "MAR");
@@ -74,8 +74,6 @@ void init_regs(tMV *MV){
     // Segmentos
     strcpy(MV->REGS[CS].nombre, "CS");
     strcpy(MV->REGS[DS].nombre, "DS");
-
-
 }
 
 void setSegmentTable(tMV *MV){
