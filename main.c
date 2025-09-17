@@ -14,7 +14,7 @@ int main()
     if (OK) {    //VALIDADO
         init_regs(&MV);  
         init_funciones(&MV);
-        printf("\n\n-EJECUCION!--------------------\n");
+        printf("\n\n-EJECUCION!--------------------");
         ejecucion(&MV);
     }
     return 0;

@@ -107,9 +107,9 @@ void ejecucion(tMV *MV){
                 printf("\nERROR, FUNCION NO EXISTE");     
                 
                 
-        }
+    }
     
-        if (MV->REGS[IP].dato>=MV->CSsize || MV->REGS[IP].dato<0)             //controlo que Ip este dentro del segmento
+        if (MV->REGS[IP].dato>=MV->CSsize)          //controlo que Ip este dentro del segmento
                 printf("Error, Segmentation Fault");
 
         /*
