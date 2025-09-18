@@ -248,6 +248,7 @@ void and(tMV *MV) {
     set(MV,MV->REGS[OP1].dato,v1&v2);
 
 }
+
 void or(tMV *MV){
     int v1,v2;
     v1 = get(MV,MV->REGS[OP1].dato);
