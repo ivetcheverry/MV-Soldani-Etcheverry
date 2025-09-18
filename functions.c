@@ -223,15 +223,21 @@ void shl (tMV *MV){
 }
 
 void shr (tMV *MV){
-    int v2;
+    int v1,v2;
 
-    v2 = get(MV,MV->REGS[OP2].dato);
+    v2 = get(MV,MV->REGS[OP2].dato); 
+    v1 = get(MV,MV->REGS[OP1].dato); 
 
-    set(MV,MV->REGS[OP1].dato, (get(MV,MV->REGS[OP1].dato)>>v2 ) );
+    set(MV,MV->REGS[OP1].dato, ((unsigned)v1>>v2 ));
 }
     
 void sar(tMV *MV){
+    int v1,v2;
 
+    v2 = get(MV,MV->REGS[OP2].dato); 
+    v1 = get(MV,MV->REGS[OP1].dato); 
+
+    set(MV,MV->REGS[OP1].dato, v1>>v2 );
 }
 
 
@@ -242,6 +248,7 @@ void and(tMV *MV) {
     set(MV,MV->REGS[OP1].dato,v1&v2);
 
 }
+
 void or(tMV *MV){
     int v1,v2;
     v1 = get(MV,MV->REGS[OP1].dato);
@@ -281,6 +288,7 @@ void ldh(tMV *MV) {
     v2 = v2<<16;
     set(MV,MV->REGS[OP1].dato,v1|v2);
 }
+
 void rnd(tMV *MV){
     int v2,aux;
     srand(time(NULL));
