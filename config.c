@@ -94,7 +94,7 @@ void setCodeSegment(FILE *arch,tMV *MV){
     }
 }
 
-void init_MV(tMV *MV, int *OK, int CONTROL[], int VERSION) {
+void init_MV(tMV *MV, int *OK, int CONTROL[], int VERSION, int argsc, char *args[]) {
 
     FILE *arch = fopen("sample.vmx","rb");
     int aux,i=0;
@@ -117,6 +117,10 @@ void init_MV(tMV *MV, int *OK, int CONTROL[], int VERSION) {
                     (*OK)=1; 
                     fread(&aux,1,1,arch);(MV->CSsize)+=aux;
                     fread(&aux,1,1,arch);(MV->CSsize)+=aux;
+                    if (argsc > 1 && strcmp(args[1], "-d") == 0) 
+                        MV->DISSASEMBLER=1;
+                    else
+                        MV->DISSASEMBLER=0;
                     setCodeSegment(arch, MV);
                     setSegmentTable(MV);
                 }

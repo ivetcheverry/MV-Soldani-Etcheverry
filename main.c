@@ -4,13 +4,13 @@
 #include "functions.h"
 
 
-int main()
+int main(int argsc, char *args[])
 {
     tMV MV;
     int VERSION = 1;
     int CONTROL[] = { 'V','M','X','2','5' };
     int OK=0;
-    init_MV(&MV, &OK, CONTROL,VERSION);
+    init_MV(&MV, &OK, CONTROL,VERSION, argsc, args);
     if (OK) {    //VALIDADO
         init_regs(&MV);  
         init_funciones(&MV);

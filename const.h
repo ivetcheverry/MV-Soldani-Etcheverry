@@ -29,6 +29,7 @@ typedef struct tMV {
     int MEMORIA[RAM];
     tfunc FUNCIONES[32];
     treg REGS[32];
+    int DISSASEMBLER;
 }tMV;
 
 

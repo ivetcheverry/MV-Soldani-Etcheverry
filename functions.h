@@ -7,7 +7,7 @@
 
 void mostrar(tMV *MV, int OPA, int OPB);
 
-void init_MV(tMV *MV, int *OK, int CONTROL[], int VERSION);
+void init_MV(tMV *MV, int *OK, int CONTROL[], int VERSION, int argsc, char *args[]);
 
 void setSegmentTable(tMV *MV);
 void setCodeSegment(FILE *arch,tMV *MV);

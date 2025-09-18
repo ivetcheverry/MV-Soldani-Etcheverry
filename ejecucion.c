@@ -98,9 +98,12 @@ void ejecucion(tMV *MV){
         int aux= MV->REGS[OPC].dato;
         if ( (aux >= 0 && aux<=8) || (aux>=15 && aux <= 31) ){ //FUNCION EXISTE?
 
-                printf("\n%s",( MV->FUNCIONES[aux]).nombre);
-                mostrar(MV,MV->REGS[OP1].dato,MV->REGS[OP2].dato);
-                printf("\n  ---\n");
+                
+                if (MV->DISSASEMBLER) {
+                    printf("\n%s",( MV->FUNCIONES[aux]).nombre);
+                    mostrar(MV,MV->REGS[OP1].dato,MV->REGS[OP2].dato);
+                    printf("\n  ---\n");
+                }
                 MV->FUNCIONES[aux].func(MV);
             }
             else 
