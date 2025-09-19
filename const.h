@@ -1,13 +1,15 @@
 // CONSTANTES EN MAYUS
 
-#define TABLA_N 2
-#define TABLA_M 2
+#define TABLA_N 8
 #define NMASK 0x8000
 #define RAM 16328
 
+#define baseCS 0 
+#define baseDS 1
+
 #define REG 1
 #define INM 2
-#define MEM 3
+#define MEMO 3
 
 
 struct tMV;
@@ -24,7 +26,7 @@ typedef struct treg{
 
 typedef struct tMV {
     int CSsize;
-    int SEGMENTTABLE[TABLA_N][TABLA_M];
+    int SEGMENTTABLE[TABLA_N];
 
     int MEMORIA[RAM];
     tfunc FUNCIONES[32];

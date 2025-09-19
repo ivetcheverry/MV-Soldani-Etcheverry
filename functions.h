@@ -6,7 +6,6 @@
 //PROTOTIPOS A TODAS LAS FUNCIONES
 
 void mostrar(tMV *MV, int OPA, int OPB);
-
 void init_MV(tMV *MV, int *OK, int CONTROL[], int VERSION, int argsc, char *args[]);
 
 void setSegmentTable(tMV *MV);
@@ -14,9 +13,11 @@ void setCodeSegment(FILE *arch,tMV *MV);
 
 void init_regs(tMV *MV);
 void init_funciones(tMV *MV);
+
 void ejecucion(tMV *MV);
 
 int get(tMV *MV, int OP);
+int getIP (tMV *MV);
 void set(tMV *MV, int OP, int valorNuevo);
 void setCC(tMV *MV, int ultvalor);
 
@@ -49,3 +50,7 @@ void swap(tMV *MV);
 void ldl(tMV *MV);
 void ldh(tMV *MV);
 void rnd(tMV *MV);
+
+//errores:
+void segmentationfault();
+void invalidfunction();

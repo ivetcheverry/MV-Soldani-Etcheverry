@@ -12,43 +12,56 @@ void mostrar(tMV *MV, int OPA, int OPB){
     t1 = OPA>>24;
     t2 = OPB>>24;
 
-    if (t1==MEM){
+    if (t1==MEMO){
         r = (OPA>>16) & 0xFF;
         off=OPA&0xFFFF;
-        printf("  [%s+%d], ",MV->REGS[r].nombre,off);
+        if (off!=0)
+            printf("  [%s+%d], ",MV->REGS[r].nombre,off);
+        else 
+            printf("  [%s], ",MV->REGS[r].nombre,off);
     }
     else if (t1==REG){
         r=OPA&0XFF;
-        printf("  %s, ",MV->REGS[r].nombre);
+        printf(" %s,",MV->REGS[r].nombre);
     }
     else
-        printf("  %d  ",OPA&0XFF);
+        printf(" %d ",OPA&0XFF);
 
 
-    if (t2==MEM){
+    if (t2==MEMO){
         r = (OPB>>16)&0x1F;
         off=OPB&0xFFFF;
-        printf("  [%s+%d], ",MV->REGS[r].nombre,off);
+        
+        if (off!=0)
+            printf(" [%s+%d]",MV->REGS[r].nombre,off);
+        else 
+            printf(" [%s]",MV->REGS[r].nombre,off);
+
+
     }
+
     else if (t2==REG){
         r=OPB&0X1F;
-        printf("  %s ",MV->REGS[r].nombre);
+        printf(" %s",MV->REGS[r].nombre);
     }
     else { //INMEDIATO
         r = OPB&0XFFFF;
         if (r & 0b1000000)
         r= (r ^ NMASK) - NMASK; 
-        printf("  %d  ",r);
+        printf(" %d",r);
     }
-        
-    
 }
+
+
+
 
 
 // SIN OPERANDOS ---------------------------------------------------------------
 void stop(tMV *MV) {
     printf("\n\n STOP ejecutado. Deteniendo la máquina virtual.");
-    MV->REGS[IP].dato =-1;
+
+    MV->REGS[IP].dato = baseCS<<16;
+    MV->REGS[IP].dato |= 0XFFFF;
 }
 
 
@@ -78,10 +91,10 @@ void sys(tMV *MV){
                 valor|=binario[i]-'0';
             }
         }
-        MV->MEMORIA[(MV->REGS[EDX].dato &0X1F) + MV->SEGMENTTABLE[1][0]]= valor;
+        MV->MEMORIA[(MV->REGS[EDX].dato &0X1F) + (MV->SEGMENTTABLE[1]>>16) & 0XFFFF]= valor;
     }  
     else { //WRITE
-        valor= MV->MEMORIA[(MV->REGS[EDX].dato &0X1F) + MV->SEGMENTTABLE[1][0]];
+        valor= get(MV,MV->REGS[EDX].dato);
         if (formato==1)
             printf("RESULTADO: %d",valor);
         else if (formato==2)
@@ -118,7 +131,6 @@ void jz (tMV *MV){
 
 void jnz (tMV *MV){
     int Z = ((MV->REGS[CC].dato >> 30) & 1); 
-    printf("\nCC: %x \n",MV->REGS[CC].dato);
 
     if (!(Z & 1))
        MV->REGS[IP].dato=get(MV, MV->REGS[OP2].dato);
@@ -298,4 +310,17 @@ void rnd(tMV *MV){
     
     set(MV,MV->REGS[OP1].dato,aux);
 
+}
+
+
+// ERRORES ------------------------------------------
+
+void segmentationfault() {
+    printf("ERROR! SEGMENTATION FAULT!");
+    exit(1);
+}
+
+void invalidfunction() {
+    printf("FUNCION INVALIDA!");
+    exit(1);
 }

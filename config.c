@@ -46,9 +46,10 @@ void init_regs(tMV *MV){
     int i;
     for (i=0;i<32;i++)
         MV->REGS[i].dato=0;
-    MV->REGS[IP].dato = MV->REGS[CS].dato = MV->SEGMENTTABLE[0][0];
-    MV->REGS[DS].dato = MV->SEGMENTTABLE[1][0];
-    MV->REGS[IP].dato = MV->SEGMENTTABLE[0][0];
+    
+    MV->REGS[IP].dato = MV->REGS[CS].dato = (MV->SEGMENTTABLE[0]>>16)&0xFFFF;
+
+    MV->REGS[DS].dato = (MV->SEGMENTTABLE[1]>>16)&0xFFFF;
 
     strcpy(MV->REGS[LAR].nombre, "LAR");
     strcpy(MV->REGS[MAR].nombre, "MAR");
@@ -77,19 +78,23 @@ void init_regs(tMV *MV){
 }
 
 void setSegmentTable(tMV *MV){
-    MV->SEGMENTTABLE[0][0]=0;
-    MV->SEGMENTTABLE[0][1]=MV->CSsize;
-    MV->SEGMENTTABLE[1][0]=MV->CSsize;
-    MV->SEGMENTTABLE[1][1]=RAM-(MV->CSsize);
-    printf("\n TABLA DE SEGMENTOS: \n %5x | | %5x \n %5x | | %5x",MV->SEGMENTTABLE[0][0],MV->SEGMENTTABLE[0][1],MV->SEGMENTTABLE[1][0],MV->SEGMENTTABLE[1][1]);
+    //FORMATO SEGMENT TABLE { BASE: 0000 SIZE: 002D, RESULTADO: 0x0000002D }
+    MV->SEGMENTTABLE[0] = 0;
+    MV->SEGMENTTABLE[0] |= MV->CSsize;
+    MV->SEGMENTTABLE[1] = (MV->CSsize)<<16;
+    MV->SEGMENTTABLE[1] |= (RAM-MV->CSsize);
+
+    printf("\n\n TABLA DE SEGMENTOS: \n\n %5x | | %5x \n %5x | | %5x",(MV->SEGMENTTABLE[0]>>16) & 0xFFFF, (MV->SEGMENTTABLE[0])&0xFFFF, (MV->SEGMENTTABLE[1]>>16) & 0xFFFF, (MV->SEGMENTTABLE[1])&0xFFFF);
+
 }
 
-
-void setCodeSegment(FILE *arch,tMV *MV){
+void setCodeSegment(FILE *arch, tMV *MV) {
     int i,aux;
     for (i=0; i<MV->CSsize ;i++){
         fread(&aux,1,1,arch);
         printf("%3x",aux);
+        if (i>0 && i%15 == 0)
+            printf("\n");
         MV->MEMORIA[i]=aux;
     }
 }
@@ -99,6 +104,7 @@ void init_MV(tMV *MV, int *OK, int CONTROL[], int VERSION, int argsc, char *args
     FILE *arch = fopen("sample.vmx","rb");
     int aux,i=0;
     if (arch){
+        printf("\n");
             fread(&aux,1,1,arch); //CONTROLO LOS CARACTERES "VMX25"
             while (i<5 && aux-CONTROL[i]==0 ) {
                 printf("%3c",aux);
@@ -109,7 +115,7 @@ void init_MV(tMV *MV, int *OK, int CONTROL[], int VERSION, int argsc, char *args
                 printf("\n ERROR, ARCHIVO NO VALIDO!");
             }
             else{//CONTROLO VERSION
-                printf("\n VERSION: %d \n", aux);
+                printf("\n VERSION: %d \n\n", aux);
                 if (aux!=VERSION)
                     printf("\n VERSION NO SOPORTADA!");
                 else { //VALIDO
