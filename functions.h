@@ -14,6 +14,7 @@ void setCodeSegment(FILE *arch,tMV *MV);
 void init_regs(tMV *MV);
 void init_funciones(tMV *MV);
 
+void acceso_mem(tMV *MV, int OP);
 void ejecucion(tMV *MV);
 
 int get(tMV *MV, int OP);
