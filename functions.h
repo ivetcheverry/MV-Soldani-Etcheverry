@@ -20,6 +20,8 @@ int get(tMV *MV, int OP);
 int getIP (tMV *MV);
 void set(tMV *MV, int OP, int valorNuevo);
 void setCC(tMV *MV, int ultvalor);
+void setsys(tMV *MV, int valorNuevo);
+int getsys(tMV *MV);
 
 void sys(tMV *MV);
 void jmp(tMV *MV);

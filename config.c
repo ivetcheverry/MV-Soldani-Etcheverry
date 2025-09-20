@@ -101,7 +101,7 @@ void setCodeSegment(FILE *arch, tMV *MV) {
 
 void init_MV(tMV *MV, int *OK, int CONTROL[], int VERSION, int argsc, char *args[]) {
 
-    FILE *arch = fopen("sample.vmx","rb");
+    FILE *arch = fopen("prueba.vmx","rb");
     int aux,i=0;
     if (arch){
         printf("\n");

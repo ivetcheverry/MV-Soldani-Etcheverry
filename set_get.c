@@ -4,9 +4,11 @@
 #include "functions.h"
 
 
+
 int get(tMV *MV, int OP) {
-    int tipo,valor,mask, byte_index, i;
+    int tipo,valor=0,mask, byte_index, i;
     int regcod, offset; // REGCOD REPRESENTADO POR 5 BITS Y EL OFFSET POR 2 BYTES.
+    int inicio,cantbytes;
 
     tipo = OP>>24;      //ME QUEDO CON EL BYTE MAS SIGNIFICATIVO
 
@@ -15,13 +17,14 @@ int get(tMV *MV, int OP) {
     else if (tipo==REG){
         regcod= OP & 0x1F;
         valor = MV->REGS[regcod].dato;
-    } else { //ES TIPO MEMORIA, LEEMOS DEL DATA SEGMENT Y JUNTAMOS EN EL MBR, DEVOLVEMOS VALOR DEL MBR.
 
-        byte_index = 0;
+    } else {
 
-        for(i= ((MV->REGS[MAR].dato & 0xFFFF)>>16) ; i< ((MV->REGS[MAR].dato & 0xFFFF0000)>>16); i++){
-            valor = (valor << 8) | (MV->MEMORIA[i] & 0xFF);
-            byte_index ++;
+        cantbytes = ((MV->REGS[MAR].dato & 0xFFFF0000)>>16);
+        inicio= ((MV->REGS[MAR].dato & 0xFFFF));
+
+        for (i = inicio ; i < inicio+cantbytes; i++) {
+            valor = (valor << 8) | (MV->MEMORIA[i]);
         }
 
         valor = MV->REGS[MBR].dato;
@@ -82,6 +85,54 @@ void set(tMV *MV, int OP, int valorNuevo) {
     else //INMEDIATO, ERROR
         invalidfunction();
 }
+
+int getsys(tMV *MV) {
+    int i, tipo, valor=0;
+    int inicio,cantbytes;
+
+        cantbytes = ((MV->REGS[MAR].dato & 0xFFFF0000)>>16);
+        inicio= ((MV->REGS[MAR].dato & 0xFFFF));
+
+        if ( (inicio+cantbytes) >= (MV->SEGMENTTABLE[baseDS]&0xFFFF) )
+            segmentationfault();
+
+        else {
+            for(i = inicio ; cantbytes > 0; cantbytes--){
+                valor = valor<<8;
+                valor |= MV->MEMORIA[i];
+                i++;
+            }
+        }
+
+    MV->REGS[MBR].dato = valor;
+    return valor;
+    
+}
+
+
+void setsys(tMV *MV, int valorNuevo) {
+    int i, tipo, valor;
+    int inicio,cantbytes;
+
+        cantbytes = ((MV->REGS[MAR].dato & 0xFFFF0000)>>16);
+        inicio= ((MV->REGS[MAR].dato & 0xFFFF))-1;
+
+        if ( (inicio+cantbytes) >= (MV->SEGMENTTABLE[baseDS]&0xFFFF) )
+            segmentationfault();
+
+        else {
+
+        MV->REGS[MBR].dato = valorNuevo;
+        for(i= inicio + cantbytes ; cantbytes > 0; cantbytes --){
+            MV->MEMORIA[i] = valorNuevo & 0xFF;   
+            valorNuevo = valorNuevo >> 8;         
+            i--;
+        }
+
+    }
+
+}
+
 
 
 void setCC(tMV *MV, int ultvalor){

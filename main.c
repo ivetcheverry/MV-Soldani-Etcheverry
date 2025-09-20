@@ -17,5 +17,7 @@ int main(int argsc, char *args[])
         printf("\n\n-EJECUCION!--------------------");
         ejecucion(&MV);
     }
+
+    printf("\n FIN DE PROCESO.");
     return 0;
 }

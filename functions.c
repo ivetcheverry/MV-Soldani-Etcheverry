@@ -67,15 +67,15 @@ void stop(tMV *MV) {
 
 // 1 OPERANDO ------------------------------------------------------------------
 void sys(tMV *MV){
-    int f,valor,formato;
+    int f,valor,formato, aux;
     char binario[33];
 
     valor=0;
     f = get(MV,MV->REGS[OP2].dato);
     formato = MV->REGS[EAX].dato&0XFF;
-
+    
     if (f==1){ //READ   
-        printf("INGRESAR VALOR: "); 
+        printf("\nINGRESAR VALOR: "); 
         if (formato==1)
             scanf("%d",&valor);
         else if (formato==2)
@@ -91,18 +91,23 @@ void sys(tMV *MV){
                 valor|=binario[i]-'0';
             }
         }
-        MV->MEMORIA[(MV->REGS[EDX].dato &0X1F) + (MV->SEGMENTTABLE[1]>>16) & 0XFFFF]= valor;
+
+        setsys(MV,valor);
+
     }  
+
+    
     else { //WRITE
-        valor= get(MV,MV->REGS[EDX].dato);
+        valor = getsys(MV);
+        printf("\n RESULTADO: ");
         if (formato==1)
-            printf("RESULTADO: %d",valor);
+            printf("%d",valor);
         else if (formato==2)
-            printf("RESULTADO: %c",valor);
+            printf("%c",valor);
         else if (formato==4)
-            printf("RESULTADO: %o",valor);
+            printf("%o",valor);
         else if (formato==8)
-            printf("RESULTADO: %x",valor);
+            printf("%x",valor);
         else { //ESCRIBIR BINARIO
             int i=32;
             while (valor > 0 && i > 0) {
@@ -110,7 +115,7 @@ void sys(tMV *MV){
             binario[i] = (valor & 1) ? '1' : '0';
             valor = valor >> 1;
         }
-        printf("RESULTADO: 0b%s", &binario[i]);
+        printf("%s", &binario[i]);
         }
 
     }
