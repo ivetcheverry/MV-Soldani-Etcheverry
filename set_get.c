@@ -19,7 +19,7 @@ int get(tMV *MV, int OP) {
         valor = MV->REGS[regcod].dato;
 
     } else {
-
+        acceso_mem(MV,OP);
         cantbytes = ((MV->REGS[MAR].dato & 0xFFFF0000)>>16);
         inicio= ((MV->REGS[MAR].dato & 0xFFFF));
 
@@ -34,7 +34,6 @@ int get(tMV *MV, int OP) {
     if (valor & 0b1000000){
         valor= (valor ^ NMASK) - NMASK;
     }
-
 
     return valor;
 }
@@ -58,7 +57,7 @@ int getIP (tMV *MV) {
 
 
 void set(tMV *MV, int OP, int valorNuevo) {
-    int i, byte_index, tipo, valor;
+    int i, tipo, valor;
     int regcod, offset;
     int inicio,cantbytes;
 
@@ -69,17 +68,16 @@ void set(tMV *MV, int OP, int valorNuevo) {
         MV->REGS[regcod].dato = valorNuevo;
     }
     else if (tipo==MEMO){
-        byte_index=0;
-
+        acceso_mem(MV,OP);
         cantbytes = ((MV->REGS[MAR].dato & 0xFFFF0000)>>16);
-        inicio= ((MV->REGS[MAR].dato & 0xFFFF));
+        inicio= ((MV->REGS[MAR].dato & 0xFFFF))-1;
 
         MV->REGS[MBR].dato = valorNuevo;
 
-        for(i= inicio ; i < inicio+cantbytes; i++){
-
-            MV->MEMORIA[i]= (valorNuevo >> (8 * (3 - byte_index))) & 0xFF;
-            byte_index ++;
+        for(i= inicio + cantbytes ; cantbytes > 0; cantbytes --){
+            MV->MEMORIA[i] = valorNuevo & 0xFF;   
+            valorNuevo = valorNuevo >> 8;         
+            i--;
         }
     }
     else //INMEDIATO, ERROR
@@ -125,7 +123,7 @@ void setsys(tMV *MV, int valorNuevo) {
         MV->REGS[MBR].dato = valorNuevo;
         for(i= inicio + cantbytes ; cantbytes > 0; cantbytes --){
             MV->MEMORIA[i] = valorNuevo & 0xFF;   
-            valorNuevo = valorNuevo >> 8;         
+                valorNuevo = valorNuevo >> 8;         
             i--;
         }
 

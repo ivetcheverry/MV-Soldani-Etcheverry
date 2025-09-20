@@ -7,7 +7,6 @@
 
 void mostrar(tMV *MV, int OPA, int OPB){
     int t1,t2,r,off;
-    t1=t2=r=off=0;
 
     t1 = OPA>>24;
     t2 = OPB>>24;
@@ -67,14 +66,17 @@ void stop(tMV *MV) {
 
 // 1 OPERANDO ------------------------------------------------------------------
 void sys(tMV *MV){
-    int f,valor,formato, aux;
+    int funcion,valor,formato, aux;
     char binario[33];
 
     valor=0;
-    f = get(MV,MV->REGS[OP2].dato);
+
+    acceso_mem(MV,MV->REGS[OP2].dato);
+
+    funcion = get(MV,MV->REGS[OP2].dato);
     formato = MV->REGS[EAX].dato&0XFF;
     
-    if (f==1){ //READ   
+    if (funcion==1){ //READ   
         printf("\nINGRESAR VALOR: "); 
         if (formato==1)
             scanf("%d",&valor);
@@ -321,11 +323,11 @@ void rnd(tMV *MV){
 // ERRORES ------------------------------------------
 
 void segmentationfault() {
-    printf("ERROR! SEGMENTATION FAULT!");
+    printf("\nERROR! SEGMENTATION FAULT!");
     exit(1);
 }
 
 void invalidfunction() {
-    printf("FUNCION INVALIDA!");
+    printf("\nFUNCION INVALIDA!");
     exit(1);
 }
