@@ -13,6 +13,8 @@ void acceso_mem (tMV *MV, int OP){
     if ( ( (OP & 0xFF000000) >>24 ) == 3) {  
         regcod = (OP & 0xFF0000) >> 16;
         offset=  (OP & 0xFFFF);
+        if (offset & NMASK16)
+        offset = (offset ^ NMASK16) - NMASK16;
     }
 
     else {      //SYS
@@ -21,7 +23,7 @@ void acceso_mem (tMV *MV, int OP){
         sys=1;
     }
 
-    MV->REGS[LAR].dato |= offset; 
+    MV->REGS[LAR].dato |= offset & 0xFFFF; 
 
     if(sys)
         MV->REGS[MAR].dato = (MV->REGS[ECX].dato & 0XFFFF0000) >> 16;
@@ -39,7 +41,6 @@ void ejecucion(tMV *MV){
 
     int top1, top2, opcod, i,j, ipvalor, valor;
     ipvalor = getIP(MV);
-    MV->DISSASEMBLER=1;
     while(ipvalor<MV->CSsize && ipvalor>=0) {
         valor=MV->MEMORIA[ipvalor];          
         MV->REGS[OP2].dato=MV->REGS[OP1].dato=0;
@@ -100,7 +101,7 @@ void ejecucion(tMV *MV){
 
         ipvalor = getIP(MV);
         
-        
+            
 
     }
 

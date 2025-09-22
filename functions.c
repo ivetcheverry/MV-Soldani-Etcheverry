@@ -16,10 +16,14 @@ void mostrar(tMV *MV, int OP, int j){
         if (tipo==MEMO){
             r = (OP>>16)&0x1F;
             off=OP&0xFFFF;
+
+            if (off & NMASK16)
+                off = (off ^ NMASK16) - NMASK16;
+
             if (off!=0)
-                printf(" [%3s+%3d]",MV->REGS[r].nombre,off);
+                printf(" [%3s%+3d]",MV->REGS[r].nombre,off);
             else 
-                printf(" [%3s]",MV->REGS[r].nombre,off);
+                printf(" [%3s]",MV->REGS[r].nombre);
         }
 
         else if (tipo==REG){
@@ -29,7 +33,7 @@ void mostrar(tMV *MV, int OP, int j){
         else{ //INMEDIATO
             r = OP&0XFFFF;
             if (j)
-                printf(" %3x",r);
+                printf(" %+3X",r);
             else {
                 if (r & NMASK16)
                 r= (r ^ NMASK16) - NMASK16; 

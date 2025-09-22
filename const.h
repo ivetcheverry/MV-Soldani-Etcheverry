@@ -1,20 +1,16 @@
 #pragma once
 // CONSTANTES EN MAYUS
 
+
+#define NOMBREARCHIVO "sample.vmx"
+
 #define TABLA_N 8
 #define NMASK16 0x8000
 #define NMASK32 0x8000000000
 #define RAM 16328
 
-#define NOMBREARCHIVO "sample.vmx"
-
 #define baseCS 0 
 #define baseDS 1
-
-#define REG 1
-#define INM 2
-#define MEMO 3
-
 
 struct tMV;
 
@@ -39,7 +35,9 @@ typedef struct tMV {
 }tMV;
 
 
-
+#define REG 1
+#define INM 2
+#define MEMO 3
 
 #define RMASK 0xFF000000 //mascara para obtener tipo de los OP1 y OP2
 #define AMASK 0x0FFF; //mascara para obtener valor de los OP1 y OP2
