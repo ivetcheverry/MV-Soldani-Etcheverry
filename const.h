@@ -1,8 +1,12 @@
+#pragma once
 // CONSTANTES EN MAYUS
 
 #define TABLA_N 8
-#define NMASK 0x8000
+#define NMASK16 0x8000
+#define NMASK32 0x8000000000
 #define RAM 16328
+
+#define NOMBREARCHIVO "sample.vmx"
 
 #define baseCS 0 
 #define baseDS 1
@@ -16,12 +20,12 @@ struct tMV;
 
 typedef struct tfunc {
     char nombre[5];
-    void (*func)(struct tMV *);//vector con punteros a funciones
+    void (*func)(struct tMV *); //vector con punteros a funciones
 }tfunc;
 
 typedef struct treg{
     char nombre[5];
-    int dato;
+    signed int dato;
 }treg;
 
 typedef struct tMV {

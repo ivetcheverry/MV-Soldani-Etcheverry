@@ -5,54 +5,39 @@
 #include "functions.h"
 #include <time.h>
 
-void mostrar(tMV *MV, int OPA, int OPB){
-    int t1,t2,r,off;
 
-    t1 = OPA>>24;
-    t2 = OPB>>24;
+void mostrar(tMV *MV, int OP, int j){
+    int tipo,r,off;
 
-    if (t1==MEMO){
-        r = (OPA>>16) & 0xFF;
-        off=OPA&0xFFFF;
-        if (off!=0)
-            printf("  [%s+%d], ",MV->REGS[r].nombre,off);
-        else 
-            printf("  [%s], ",MV->REGS[r].nombre,off);
-    }
-    else if (t1==REG){
-        r=OPA&0XFF;
-        printf(" %s,",MV->REGS[r].nombre);
-    }
-    else
-        printf(" %d ",OPA&0XFF);
+    tipo = OP>>24;
 
+    if (tipo!=0) {
 
-    if (t2==MEMO){
-        r = (OPB>>16)&0x1F;
-        off=OPB&0xFFFF;
-        
-        if (off!=0)
-            printf(" [%s+%d]",MV->REGS[r].nombre,off);
-        else 
-            printf(" [%s]",MV->REGS[r].nombre,off);
+        if (tipo==MEMO){
+            r = (OP>>16)&0x1F;
+            off=OP&0xFFFF;
+            if (off!=0)
+                printf(" [%3s+%3d]",MV->REGS[r].nombre,off);
+            else 
+                printf(" [%3s]",MV->REGS[r].nombre,off);
+        }
 
-
-    }
-
-    else if (t2==REG){
-        r=OPB&0X1F;
-        printf(" %s",MV->REGS[r].nombre);
-    }
-    else { //INMEDIATO
-        r = OPB&0XFFFF;
-        if (r & 0b1000000)
-        r= (r ^ NMASK) - NMASK; 
-        printf(" %d",r);
+        else if (tipo==REG){
+            r=OP&0X1F;
+            printf(" %3s",MV->REGS[r].nombre);
+        }
+        else{ //INMEDIATO
+            r = OP&0XFFFF;
+            if (j)
+                printf(" %3x",r);
+            else {
+                if (r & NMASK16)
+                r= (r ^ NMASK16) - NMASK16; 
+                printf(" %3d",r);
+            }
+        }
     }
 }
-
-
-
 
 
 // SIN OPERANDOS ---------------------------------------------------------------
@@ -101,7 +86,7 @@ void sys(tMV *MV){
     
     else { //WRITE
         valor = getsys(MV);
-        printf("\n RESULTADO: ");
+        printf("\n\tRESULTADO: ");
         if (formato==1)
             printf("%d",valor);
         else if (formato==2)
@@ -162,13 +147,23 @@ void jp (tMV *MV){
 }
 
 void jnp (tMV *MV){
-    int N = (MV->REGS[CC].dato >> 31) & 0b1 ; 
+    int N,Z;
+    N = (MV->REGS[CC].dato >> 31) & 0b1 ;
     if (N & 1)
        MV->REGS[IP].dato=get(MV, MV->REGS[OP2].dato);
+    else{
+        Z = (MV->REGS[CC].dato >> 30) & 0b1 ;
+        if (Z & 1)
+            MV->REGS[IP].dato=get(MV, MV->REGS[OP2].dato);
+    }
 }
 
-void not_(tMV *MV){
-    set(MV, MV->REGS[OP2].dato, ~ MV->REGS[OP2].dato);
+void not_(tMV *MV){     
+    int aux;
+    aux = get(MV, MV->REGS[OP2].dato);
+    aux = ~aux;
+
+    set(MV,MV->REGS[OP2].dato,aux);
 
     setCC(MV,get(MV,MV->REGS[OP2].dato));
 }
@@ -184,6 +179,7 @@ void mov(tMV *MV){
 void add(tMV *MV){
     int suma;
     suma = get(MV,MV->REGS[OP1].dato)+get(MV,MV->REGS[OP2].dato);
+
     set(MV,MV->REGS[OP1].dato,suma);
 
     setCC(MV,get(MV,MV->REGS[OP1].dato));
@@ -191,16 +187,19 @@ void add(tMV *MV){
 
 void sub (tMV *MV){
     int resta;
-    resta = get(MV,MV->REGS[OP1].dato)-get(MV,MV->REGS[OP2].dato);
-    set(MV,MV->REGS[OP1].dato,resta);
 
+    resta = get(MV,MV->REGS[OP1].dato)-get(MV,MV->REGS[OP2].dato) ;
+    //resta &= 0x0000FFFF;
+
+    set(MV,MV->REGS[OP1].dato,resta);
     setCC(MV,get(MV,MV->REGS[OP1].dato));
 }
 
 void mul (tMV *MV){
-    int v1, v2;
+    int v1, v2,mul;
     v1 = get(MV,MV->REGS[OP1].dato);
     v2 = get(MV,MV->REGS[OP2].dato);
+
     set(MV,MV->REGS[OP1].dato,v1*v2);
 
     setCC(MV,get(MV,MV->REGS[OP1].dato));
@@ -213,15 +212,17 @@ void div_(tMV *MV){
     v2 = get(MV,MV->REGS[OP2].dato);
 
     if(v2!=0){
-        set(MV,MV->REGS[MBR].dato, v1 / v2);
-        set(MV,MV->REGS[AC].dato, v1 % v2);   //resto en AC
+        set(MV,MV->REGS[OP1].dato, v1 / v2);
+        MV->REGS[AC].dato = v1 % v2;   //resto en AC
 
-        setCC(MV,get(MV,MV->REGS[MBR].dato));
+        setCC(MV,get(MV,MV->REGS[OP1].dato));
     }
     else
-        printf("Error, division por 0");
+        divisionzero();
     
 }
+
+
 
 void cmp (tMV *MV){
     int v1, v2, result;
@@ -243,12 +244,18 @@ void shl (tMV *MV){
 
 void shr (tMV *MV){
     int v1,v2;
+    unsigned int mask_aux;
 
     v2 = get(MV,MV->REGS[OP2].dato); 
     v1 = get(MV,MV->REGS[OP1].dato); 
 
-    set(MV,MV->REGS[OP1].dato, ((unsigned)v1>>v2 ));
-}
+    v1 = v1 >> v2;
+    mask_aux = 0xFFFFFFFF >> v2;
+    v1 &= mask_aux; 
+
+    set(MV,MV->REGS[OP1].dato, v1);
+} 
+
     
 void sar(tMV *MV){
     int v1,v2;
@@ -275,6 +282,9 @@ void or(tMV *MV){
     set(MV,MV->REGS[OP1].dato,v1|v2);
 
 }
+
+
+
 void xor(tMV *MV){
     int v1,v2;
     v1 = get(MV,MV->REGS[OP1].dato);
@@ -285,9 +295,9 @@ void xor(tMV *MV){
 void swap(tMV *MV) {
     int v1,v2,aux;
 
-    aux= v1 = get(MV,MV->REGS[OP1].dato);
-    v2 = get(MV,MV->REGS[OP2].dato);
-
+    v1 = get(MV,MV->REGS[OP1].dato)&0xFFFF;
+    v2 = get(MV,MV->REGS[OP2].dato)&0xFFFF;
+    aux = v1;
     set(MV,MV->REGS[OP1].dato,v2);
     set(MV,MV->REGS[OP2].dato,aux);
 }
@@ -329,5 +339,10 @@ void segmentationfault() {
 
 void invalidfunction() {
     printf("\nFUNCION INVALIDA!");
+    exit(1);
+}
+
+void divisionzero() {
+    printf("\nERROR! DIVISION POR CERO!");
     exit(1);
 }

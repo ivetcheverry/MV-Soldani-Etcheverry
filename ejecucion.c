@@ -37,8 +37,7 @@ void acceso_mem (tMV *MV, int OP){
     
 void ejecucion(tMV *MV){
 
-    int top1, top2, opcod, i, ipvalor, valor;
-    MV->DISSASEMBLER=1;
+    int top1, top2, opcod, i,j, ipvalor, valor;
     ipvalor = getIP(MV);
 
     while(ipvalor<MV->CSsize && ipvalor>=0) {
@@ -71,13 +70,28 @@ void ejecucion(tMV *MV){
             }
             MV->REGS[OP1].dato |= (top1<<24);
 
+/*
+            printf("\nOP1: %0x\n", MV->REGS[OP1].dato);
+            printf("\nOP2: %0x\n", MV->REGS[OP2].dato);
+
+*/
+        
         int aux= MV->REGS[OPC].dato;
         MV->REGS[IP].dato++;
         
         if ( (aux >= 0 && aux<=8) || (aux>=15 && aux <= 31) ){
             if (MV->DISSASEMBLER){
-                printf("\n[%04X] %s",ipvalor,( MV->FUNCIONES[aux]).nombre);
-                mostrar(MV,MV->REGS[OP1].dato,MV->REGS[OP2].dato);
+                printf("\n[%04X] %4s",ipvalor,( MV->FUNCIONES[aux]).nombre);
+
+                if (aux >= 1 && aux <=7)
+                    j = 1;
+                else
+                    j=0;
+
+                mostrar(MV,MV->REGS[OP1].dato,j);
+                mostrar(MV,MV->REGS[OP2].dato,j);
+
+
             }
             MV->FUNCIONES[aux].func(MV);
         }

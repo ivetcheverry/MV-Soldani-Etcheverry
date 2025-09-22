@@ -12,13 +12,16 @@ int get(tMV *MV, int OP) {
 
     tipo = OP>>24;      //ME QUEDO CON EL BYTE MAS SIGNIFICATIVO
 
-    if (tipo==INM)
+    if (tipo==INM){
         valor = OP &0XFFFF; // INMEDIATO: VALOR DE LOS ULTIMOS 2 BYTES
-    else if (tipo==REG){
+        if (valor & NMASK16)
+        valor = (valor ^ NMASK16) - NMASK16;
+    }else if (tipo==REG){
         regcod= OP & 0x1F;
         valor = MV->REGS[regcod].dato;
 
-    } else {
+    } 
+     else {
         acceso_mem(MV,OP);
         cantbytes = ((MV->REGS[MAR].dato & 0xFFFF0000)>>16);
         inicio= ((MV->REGS[MAR].dato & 0xFFFF));
@@ -29,13 +32,12 @@ int get(tMV *MV, int OP) {
 
         valor = MV->REGS[MBR].dato;
     }
-
-    //ANALIZO SI ES NEGATIVO:
-    if (valor & 0b1000000){
-        valor= (valor ^ NMASK) - NMASK;
-    }
+    //negativo de 32bits?
+    if (valor & NMASK32)
+        valor = (valor ^ NMASK32) - NMASK32;
 
     return valor;
+
 }
 
 
@@ -47,9 +49,9 @@ int getIP (tMV *MV) {
 
     valor = (MV->SEGMENTTABLE[base]>>16 &0xFFFF) + offset;
 
-    if (valor & 0b1000000){
-        valor= (valor ^ NMASK) - NMASK;
-    }
+    if (valor & NMASK16)
+        valor= (valor ^ NMASK16) - NMASK16;
+
 
     return valor;
 
@@ -80,7 +82,7 @@ void set(tMV *MV, int OP, int valorNuevo) {
             i--;
         }
     }
-    else //INMEDIATO, ERROR
+    else //INMEDIATO, ERROR  
         invalidfunction();
 }
 
@@ -103,7 +105,7 @@ int getsys(tMV *MV) {
         }
 
     MV->REGS[MBR].dato = valor;
-    return valor;
+    return MV->REGS[MBR].dato;
     
 }
 

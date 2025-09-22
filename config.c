@@ -84,7 +84,7 @@ void setSegmentTable(tMV *MV){
     MV->SEGMENTTABLE[1] = (MV->CSsize)<<16;
     MV->SEGMENTTABLE[1] |= (RAM-MV->CSsize);
 
-    printf("\n\n TABLA DE SEGMENTOS: \n\n %5x | | %5x \n %5x | | %5x",(MV->SEGMENTTABLE[0]>>16) & 0xFFFF, (MV->SEGMENTTABLE[0])&0xFFFF, (MV->SEGMENTTABLE[1]>>16) & 0xFFFF, (MV->SEGMENTTABLE[1])&0xFFFF);
+    //printf("\n\n TABLA DE SEGMENTOS: \n\n %5x | | %5x \n %5x | | %5x",(MV->SEGMENTTABLE[0]>>16) & 0xFFFF, (MV->SEGMENTTABLE[0])&0xFFFF, (MV->SEGMENTTABLE[1]>>16) & 0xFFFF, (MV->SEGMENTTABLE[1])&0xFFFF);
 
 }
 
@@ -92,22 +92,24 @@ void setCodeSegment(FILE *arch, tMV *MV) {
     int i,aux;
     for (i=0; i<MV->CSsize ;i++){
         fread(&aux,1,1,arch);
+         /*  
         printf("%3x",aux);
         if (i>0 && i%15 == 0)
             printf("\n");
+        */
         MV->MEMORIA[i]=aux;
     }
 }
 
 void init_MV(tMV *MV, int *OK, int CONTROL[], int VERSION, int argsc, char *args[]) {
 
-    FILE *arch = fopen("prueba.vmx","rb");
+    FILE *arch = fopen(NOMBREARCHIVO,"rb");
     int aux,i=0;
     if (arch){
         printf("\n");
             fread(&aux,1,1,arch); //CONTROLO LOS CARACTERES "VMX25"
             while (i<5 && aux-CONTROL[i]==0 ) {
-                printf("%3c",aux);
+                //printf("%3c",aux);
                 i++;
                 fread(&aux,1,1,arch);
             }
@@ -115,7 +117,7 @@ void init_MV(tMV *MV, int *OK, int CONTROL[], int VERSION, int argsc, char *args
                 printf("\n ERROR, ARCHIVO NO VALIDO!");
             }
             else{//CONTROLO VERSION
-                printf("\n VERSION: %d \n\n", aux);
+                //printf("\n VERSION: %d \n\n", aux);
                 if (aux!=VERSION)
                     printf("\n VERSION NO SOPORTADA!");
                 else { //VALIDO
