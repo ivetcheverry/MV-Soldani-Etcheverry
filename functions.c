@@ -295,8 +295,8 @@ void xor(tMV *MV){
 void swap(tMV *MV) {
     int v1,v2,aux;
 
-    v1 = get(MV,MV->REGS[OP1].dato)&0xFFFF;
-    v2 = get(MV,MV->REGS[OP2].dato)&0xFFFF;
+    v1 = get(MV,MV->REGS[OP1].dato);
+    v2 = get(MV,MV->REGS[OP2].dato);
     aux = v1;
     set(MV,MV->REGS[OP1].dato,v2);
     set(MV,MV->REGS[OP2].dato,aux);
@@ -320,7 +320,6 @@ void ldh(tMV *MV) {
 
 void rnd(tMV *MV){
     int v2,aux;
-    srand(time(NULL));
 
     v2 = get(MV,MV->REGS[OP2].dato);
     aux = rand() % (v2 + 1);
