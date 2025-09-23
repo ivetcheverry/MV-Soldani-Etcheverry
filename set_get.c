@@ -7,13 +7,13 @@
 
 int get(tMV *MV, int OP) {
     int tipo,valor=0,mask, byte_index, i;
-    int regcod, offset; // REGCOD REPRESENTADO POR 5 BITS Y EL OFFSET POR 2 BYTES.
+    int regcod, offset;
     int inicio,cantbytes;
 
-    tipo = OP>>24;      //ME QUEDO CON EL BYTE MAS SIGNIFICATIVO
+    tipo = OP>>24;   
 
     if (tipo==INM){
-        valor = OP &0XFFFF; // INMEDIATO: VALOR DE LOS ULTIMOS 2 BYTES
+        valor = OP &0XFFFF;
         if (valor & NMASK16)
         valor = (valor ^ NMASK16) - NMASK16;
     }else if (tipo==REG){
@@ -35,7 +35,6 @@ int get(tMV *MV, int OP) {
 
         valor = MV->REGS[MBR].dato;
     }
-    //negativo de 32bits?
     if (valor & NMASK32)
         valor = (valor ^ NMASK32) - NMASK32;
 
@@ -144,7 +143,7 @@ void setsys(tMV *MV, int valorNuevo) {
 void setCC(tMV *MV, int ultvalor){
     int n,z;
     int cc ;
-    cc = MV->REGS[CC].dato & 0x3FFFFFFF; //los primeros 2 bits quedan en 0, lo demas igual.
+    cc = MV->REGS[CC].dato & 0x3FFFFFFF;
 
     if(ultvalor == 0)
         n = (1 << 30);

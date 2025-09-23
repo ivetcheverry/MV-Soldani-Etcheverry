@@ -44,7 +44,7 @@ void mostrar(tMV *MV, int OP, int j){
 }
 
 
-// SIN OPERANDOS ---------------------------------------------------------------
+// SIN OPERANDOS ------------------------------------------------------------
 void stop(tMV *MV) {
     printf("\n\n STOP ejecutado. Deteniendo la máquina virtual.");
 
@@ -53,7 +53,7 @@ void stop(tMV *MV) {
 }
 
 
-// 1 OPERANDO ------------------------------------------------------------------
+// 1 OPERANDO ---------------------------------------------------------------
 void sys(tMV *MV){
     int funcion,valor,formato, aux;
     char binario[33];
@@ -173,7 +173,7 @@ void not_(tMV *MV){
 }
 
 
-// 2 OPERANDOS -----------------------------------------------------------------
+// 2 OPERANDOS --------------------------------------------------------------
 
 void mov(tMV *MV){
     set(MV,MV->REGS[OP1].dato ,get(MV,MV->REGS[OP2].dato));
@@ -217,7 +217,7 @@ void div_(tMV *MV){
 
     if(v2!=0){
         set(MV,MV->REGS[OP1].dato, v1 / v2);
-        MV->REGS[AC].dato = v1 % v2;   //resto en AC
+        MV->REGS[AC].dato = v1 % v2; 
 
         setCC(MV,get(MV,MV->REGS[OP1].dato));
     }

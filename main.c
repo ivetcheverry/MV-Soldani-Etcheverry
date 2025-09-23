@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "const.h" //ARCHIVO CON CONSTANTES GENERALES
+#include "const.h"
 #include "functions.h"
 
 

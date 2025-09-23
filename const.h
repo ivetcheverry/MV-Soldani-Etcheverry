@@ -1,6 +1,4 @@
 #pragma once
-// CONSTANTES EN MAYUS
-
 
 #define NOMBREARCHIVO "sample.vmx"
 

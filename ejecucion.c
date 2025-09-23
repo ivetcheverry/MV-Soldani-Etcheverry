@@ -52,8 +52,6 @@ void ejecucion(tMV *MV){
 
         MV->REGS[OPC].dato = opcod; 
 
-//- LECTURA DE VALORES (SE UTILIZA IP)
-
             for (i=0; i < top2; i++) {
                 (MV->REGS[OP2].dato)=(MV->REGS[OP2].dato<<8);
                 MV->REGS[IP].dato+=1;

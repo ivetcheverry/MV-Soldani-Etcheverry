@@ -3,7 +3,6 @@
 #include <stdint.h>
 #include "const.h"
 
-//PROTOTIPOS A TODAS LAS FUNCIONES
 
 void mostrar(tMV *MV, int OP, int j);
 void init_MV(tMV *MV, int *OK, int CONTROL[], int VERSION, int argsc, char *args[]);
