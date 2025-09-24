@@ -26,7 +26,7 @@ int get(tMV *MV, int OP) {
         cantbytes = ((MV->REGS[MAR].dato & 0xFFFF0000)>>16);
         inicio= ((MV->REGS[MAR].dato & 0xFFFF));
 
-        if ( (inicio+cantbytes) >= (MV->SEGMENTTABLE[baseDS]&0xFFFF) || inicio < ((MV->SEGMENTTABLE[baseDS]>>16) & 0XFFFF))
+        if ( (inicio+cantbytes) >= (MV->SEGMENTTABLE[baseDS]&0xFFFF))
             segmentationfault();
 
         for (i = inicio ; i < inicio+cantbytes; i++) {
@@ -76,7 +76,7 @@ void set(tMV *MV, int OP, int valorNuevo) {
         cantbytes = ((MV->REGS[MAR].dato & 0xFFFF0000)>>16);
         inicio= ((MV->REGS[MAR].dato & 0xFFFF))-1;
 
-        if ( (inicio+cantbytes) >= (MV->SEGMENTTABLE[baseDS]&0xFFFF) || inicio < ((MV->SEGMENTTABLE[baseDS]>>16) & 0XFFFF))
+        if ( (inicio+cantbytes) >= (MV->SEGMENTTABLE[baseDS]&0xFFFF))
             segmentationfault();
 
         MV->REGS[MBR].dato = valorNuevo;
@@ -98,7 +98,7 @@ int getsys(tMV *MV) {
         cantbytes = ((MV->REGS[MAR].dato & 0xFFFF0000)>>16);
         inicio= ((MV->REGS[MAR].dato & 0xFFFF));
 
-        if ( (inicio+cantbytes) >= (MV->SEGMENTTABLE[baseDS]&0xFFFF) || inicio < ((MV->SEGMENTTABLE[baseDS]>>16) & 0XFFFF))
+        if ( (inicio+cantbytes) >= (MV->SEGMENTTABLE[baseDS]&0xFFFF))
             segmentationfault();
 
         else {
@@ -122,7 +122,7 @@ void setsys(tMV *MV, int valorNuevo) {
         cantbytes = ((MV->REGS[MAR].dato & 0xFFFF0000)>>16);
         inicio= ((MV->REGS[MAR].dato & 0xFFFF))-1;
 
-        if ( (inicio+cantbytes) >= (MV->SEGMENTTABLE[baseDS]&0xFFFF) || inicio < ((MV->SEGMENTTABLE[baseDS]>>16) & 0XFFFF))
+        if ( (inicio+cantbytes) >= (MV->SEGMENTTABLE[baseDS]&0xFFFF))
             segmentationfault();
 
         else {

@@ -55,27 +55,32 @@ void stop(tMV *MV) {
 
 // 1 OPERANDO ---------------------------------------------------------------
 void sys(tMV *MV){
-    int funcion,valor,formato, aux;
+    int funcion,valor, aux;
     char binario[33];
-
+    int B,H,O,D,C;
+    
     valor=0;
 
     acceso_mem(MV,MV->REGS[OP2].dato);
 
     funcion = get(MV,MV->REGS[OP2].dato);
-    formato = MV->REGS[EAX].dato&0XFF;
+    D =  MV->REGS[EAX].dato&0b1;
+    C =  MV->REGS[EAX].dato&0b10;
+    O =  MV->REGS[EAX].dato&0b100;
+    H =  MV->REGS[EAX].dato&0b1000;
+    B =  MV->REGS[EAX].dato&0b10000;
     
     if (funcion==1){ //READ   
         printf("\nINGRESAR VALOR: "); 
-        if (formato==1)
+        if (D)
             scanf("%d",&valor);
-        else if (formato==2)
+        if (C)
             scanf("%c",&valor);
-        else if (formato==4)
+        if (O)
             scanf("%o",&valor);
-        else if (formato==8)
+        if (H)
             scanf("%x",&valor);
-        else {
+        if (B) {
             scanf("%s",binario);
             for (int i=strlen(binario)-1 ; i>=0 ; i--){
                 valor=valor<<1;
@@ -91,22 +96,22 @@ void sys(tMV *MV){
     else { //WRITE
         valor = getsys(MV);
         printf("\n\tRESULTADO: ");
-        if (formato==1)
-            printf("%d",valor);
-        else if (formato==2)
-            printf("%c",valor);
-        else if (formato==4)
-            printf("%o",valor);
-        else if (formato==8)
-            printf("%x",valor);
-        else { //ESCRIBIR BINARIO
+        if (D)
+            printf("%d\t",valor);
+        if (C)
+            printf("%c\t",(char)valor);
+        if (O)
+            printf("0o%o\t",valor);
+        if (H)
+            printf("0x%x\t",valor);
+        if (B){ 
             int i=32;
             while (valor > 0 && i > 0) {
             i--;
             binario[i] = (valor & 1) ? '1' : '0';
             valor = valor >> 1;
         }
-        printf("%s", &binario[i]);
+        printf("0b%s\t", &binario[i]);
         }
 
     }

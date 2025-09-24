@@ -41,6 +41,7 @@ void ejecucion(tMV *MV){
 
     int top1, top2, opcod, i,j, ipvalor, valor;
     ipvalor = getIP(MV);
+    MV->DISSASEMBLER=1;
     while(ipvalor<MV->CSsize && ipvalor>=0) {
         valor=MV->MEMORIA[ipvalor];          
         MV->REGS[OP2].dato=MV->REGS[OP1].dato=0;
