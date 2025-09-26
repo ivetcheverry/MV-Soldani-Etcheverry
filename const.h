@@ -7,7 +7,7 @@
 #define NMASK32 0x8000000000
 #define RAM 16328
 
-#define baseCS 0 
+#define baseCS 0
 #define baseDS 1
 
 struct tMV;

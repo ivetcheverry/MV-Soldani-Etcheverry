@@ -22,7 +22,7 @@ void mostrar(tMV *MV, int OP, int j){
 
             if (off!=0)
                 printf(" [%3s%+3d]",MV->REGS[r].nombre,off);
-            else 
+            else
                 printf(" [%3s]",MV->REGS[r].nombre);
         }
 
@@ -36,7 +36,7 @@ void mostrar(tMV *MV, int OP, int j){
                 printf(" %+3X",r);
             else {
                 if (r & NMASK16)
-                r= (r ^ NMASK16) - NMASK16; 
+                r= (r ^ NMASK16) - NMASK16;
                 printf(" %3d",r);
             }
         }
@@ -47,7 +47,7 @@ void mostrar(tMV *MV, int OP, int j){
 // SIN OPERANDOS ------------------------------------------------------------
 void stop(tMV *MV) {
     printf("\n\n STOP ejecutado. Deteniendo la máquina virtual.");
-
+    
     MV->REGS[IP].dato = baseCS<<16;
     MV->REGS[IP].dato |= 0XFFFF;
 }
@@ -56,9 +56,9 @@ void stop(tMV *MV) {
 // 1 OPERANDO ---------------------------------------------------------------
 void sys(tMV *MV){
     int funcion,valor, aux;
-    char binario[33];
+    char binario[33],imprimir[8];
     int B,H,O,D,C;
-    
+
     valor=0;
 
     acceso_mem(MV,MV->REGS[OP2].dato);
@@ -69,9 +69,12 @@ void sys(tMV *MV){
     O =  MV->REGS[EAX].dato&0b100;
     H =  MV->REGS[EAX].dato&0b1000;
     B =  MV->REGS[EAX].dato&0b10000;
-    
-    if (funcion==1){ //READ   
-        printf("\nINGRESAR VALOR: "); 
+
+    int cantidadceldas= (MV->REGS[ECX].dato&0XFFFF);
+    for (int i= 0; i< cantidadceldas; i++){
+        printf("\n");
+    if (funcion==1){ //READ
+        printf("[%04X]  ", MV->REGS[MAR].dato&0XFFFF);
         if (D)
             scanf("%d",&valor);
         if (C)
@@ -90,32 +93,49 @@ void sys(tMV *MV){
 
         setsys(MV,valor);
 
-    }  
+    }
 
-    
+
     else { //WRITE
+        
         valor = getsys(MV);
-        printf("\n\tRESULTADO: ");
+        printf("[%04X]  ", MV->REGS[MAR].dato&0XFFFF);
         if (D)
             printf("%d\t",valor);
-        if (C)
-            printf("%c\t",(char)valor);
-        if (O)
-            printf("0o%o\t",valor);
-        if (H)
-            printf("0x%x\t",valor);
-        if (B){ 
-            int i=32;
-            while (valor > 0 && i > 0) {
-            i--;
-            binario[i] = (valor & 1) ? '1' : '0';
-            valor = valor >> 1;
-        }
-        printf("0b%s\t", &binario[i]);
+        int tmp_val = valor;  // guardo el valor original
+        if (C) {
+
+                for(int i=0; i< ((MV->REGS[ECX].dato&0xFFFF0000) >> 16); i++){
+                    imprimir[i]=(char)tmp_val&0xff;
+                    tmp_val = tmp_val>>8;
+                }
+                for(int i=((MV->REGS[ECX].dato&0xFFFF0000) >> 16)-1; i>=0;i--)
+                    if(imprimir[i]>=0 && imprimir[i] <128)
+                        printf("%c",(char)imprimir[i]);
+                    else
+                        printf(".");
+                printf(" \t");
         }
 
-    }
+        if (O)
+            printf("0o%o \t", (unsigned int)valor);
+        if (H)
+            printf("0x%08x \t", (unsigned int)valor);
+
+        if (B){
+            unsigned int tmp = (unsigned int)valor;
+            for(int i=31; i>=0; i--){
+                binario[31-i] = (tmp & (1U << i)) ? '1' : '0';
+            }
+            binario[32] = '\0';
+            printf("0b%s\t", binario);
+        }
+
+
+        }
+    MV->REGS[MAR].dato+= ((MV->REGS[ECX].dato>>16)&0xffff);
     
+    }
 
 }
 
@@ -125,33 +145,34 @@ void jmp(tMV *MV){
 }
 
 void jz (tMV *MV){
-    int Z = (MV->REGS[CC].dato >> 30) & 0b1 ; 
+    int Z = (MV->REGS[CC].dato >> 30) & 0b1 ;
     if (Z & 1)
        MV->REGS[IP].dato=get(MV, MV->REGS[OP2].dato);
 }
 
 void jnz (tMV *MV){
-    int Z = ((MV->REGS[CC].dato >> 30) & 1); 
+    int Z = ((MV->REGS[CC].dato >> 30) & 1);
 
     if (!(Z & 1))
        MV->REGS[IP].dato=get(MV, MV->REGS[OP2].dato);
 }
 
 void jn_ (tMV *MV){
-    int N = (MV->REGS[CC].dato >> 31) & 0b1 ; 
+    int N = (MV->REGS[CC].dato >> 31) & 0b1 ;
     if (N & 1)
        MV->REGS[IP].dato=get(MV, MV->REGS[OP2].dato);
 }
 
 void jnn (tMV *MV){
-    int N = (MV->REGS[CC].dato >> 31) & 0b1 ; 
+    int N = (MV->REGS[CC].dato >> 31) & 0b1 ;
     if (!(N & 1))
        MV->REGS[IP].dato=get(MV, MV->REGS[OP2].dato);
 }
 
 void jp (tMV *MV){
-    int N = (MV->REGS[CC].dato >> 31) & 0b1 ; 
-    if (!(N & 1))
+    int N = (MV->REGS[CC].dato >> 31) & 0b1 ;
+    int Z = ((MV->REGS[CC].dato >> 30) & 1);
+    if (!(N & 1) && !(Z & 1))
        MV->REGS[IP].dato=get(MV, MV->REGS[OP2].dato);
 }
 
@@ -167,7 +188,7 @@ void jnp (tMV *MV){
     }
 }
 
-void not_(tMV *MV){     
+void not_(tMV *MV){
     int aux;
     aux = get(MV, MV->REGS[OP2].dato);
     aux = ~aux;
@@ -222,13 +243,13 @@ void div_(tMV *MV){
 
     if(v2!=0){
         set(MV,MV->REGS[OP1].dato, v1 / v2);
-        MV->REGS[AC].dato = v1 % v2; 
+        MV->REGS[AC].dato = v1 % v2;
 
         setCC(MV,get(MV,MV->REGS[OP1].dato));
     }
     else
         divisionzero();
-    
+
 }
 
 
@@ -240,7 +261,7 @@ void cmp (tMV *MV){
     v2 = get(MV,MV->REGS[OP2].dato);
 
     setCC(MV,v1-v2);
-    
+
 }
 
 void shl (tMV *MV){
@@ -255,22 +276,22 @@ void shr (tMV *MV){
     int v1,v2;
     unsigned int mask_aux;
 
-    v2 = get(MV,MV->REGS[OP2].dato); 
-    v1 = get(MV,MV->REGS[OP1].dato); 
+    v2 = get(MV,MV->REGS[OP2].dato);
+    v1 = get(MV,MV->REGS[OP1].dato);
 
     v1 = v1 >> v2;
     mask_aux = 0xFFFFFFFF >> v2;
-    v1 &= mask_aux; 
+    v1 &= mask_aux;
 
     set(MV,MV->REGS[OP1].dato, v1);
-} 
+}
 
-    
+
 void sar(tMV *MV){
     int v1,v2;
 
-    v2 = get(MV,MV->REGS[OP2].dato); 
-    v1 = get(MV,MV->REGS[OP1].dato); 
+    v2 = get(MV,MV->REGS[OP2].dato);
+    v1 = get(MV,MV->REGS[OP1].dato);
 
     set(MV,MV->REGS[OP1].dato, v1>>v2 );
 }
@@ -313,7 +334,7 @@ void swap(tMV *MV) {
 
 void ldl(tMV *MV){
     int v1,v2;
-    v1 = get(MV,MV->REGS[OP1].dato);
+    v1 = get(MV,MV->REGS[OP1].dato)&0xFFFF0000;
     v2 = (get(MV,MV->REGS[OP2].dato))&0xFFFF;
     set(MV,MV->REGS[OP1].dato,v1|v2);
 
@@ -321,7 +342,7 @@ void ldl(tMV *MV){
 
 void ldh(tMV *MV) {
     int v1,v2;
-    v1 = get(MV,MV->REGS[OP1].dato);
+    v1 = get(MV,MV->REGS[OP1].dato)&0xFFFF;
     v2 = (get(MV,MV->REGS[OP2].dato))&0xFFFF;
     v2 = v2<<16;
     set(MV,MV->REGS[OP1].dato,v1|v2);
@@ -332,7 +353,7 @@ void rnd(tMV *MV){
 
     v2 = get(MV,MV->REGS[OP2].dato);
     aux = rand() % (v2 + 1);
-    
+
     set(MV,MV->REGS[OP1].dato,aux);
 
 }

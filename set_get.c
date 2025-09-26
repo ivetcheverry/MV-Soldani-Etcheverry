@@ -10,7 +10,7 @@ int get(tMV *MV, int OP) {
     int regcod, offset;
     int inicio,cantbytes;
 
-    tipo = OP>>24;   
+    tipo = OP>>24;
 
     if (tipo==INM){
         valor = OP &0XFFFF;
@@ -19,8 +19,7 @@ int get(tMV *MV, int OP) {
     }else if (tipo==REG){
         regcod= OP & 0x1F;
         valor = MV->REGS[regcod].dato;
-
-    } 
+    }
      else {
         acceso_mem(MV,OP);
         cantbytes = ((MV->REGS[MAR].dato & 0xFFFF0000)>>16);
@@ -33,7 +32,7 @@ int get(tMV *MV, int OP) {
             valor = (valor << 8) | (MV->MEMORIA[i]);
         }
 
-        valor = MV->REGS[MBR].dato;
+        MV->REGS[MBR].dato = valor;
     }
     if (valor & NMASK32)
         valor = (valor ^ NMASK32) - NMASK32;
@@ -82,12 +81,12 @@ void set(tMV *MV, int OP, int valorNuevo) {
         MV->REGS[MBR].dato = valorNuevo;
 
         for(i= inicio + cantbytes ; cantbytes > 0; cantbytes --){
-            MV->MEMORIA[i] = valorNuevo & 0xFF;   
-            valorNuevo = valorNuevo >> 8;         
+            MV->MEMORIA[i] = valorNuevo & 0xFF;
+            valorNuevo = valorNuevo >> 8;
             i--;
         }
     }
-    else //INMEDIATO, ERROR  
+    else //INMEDIATO, ERROR
         invalidfunction();
 }
 
@@ -109,9 +108,10 @@ int getsys(tMV *MV) {
             }
         }
 
+
     MV->REGS[MBR].dato = valor;
     return MV->REGS[MBR].dato;
-    
+
 }
 
 
@@ -129,8 +129,8 @@ void setsys(tMV *MV, int valorNuevo) {
 
         MV->REGS[MBR].dato = valorNuevo;
         for(i= inicio + cantbytes ; cantbytes > 0; cantbytes --){
-            MV->MEMORIA[i] = valorNuevo & 0xFF;   
-                valorNuevo = valorNuevo >> 8;         
+            MV->MEMORIA[i] = valorNuevo & 0xFF;
+                valorNuevo = valorNuevo >> 8;
             i--;
         }
 

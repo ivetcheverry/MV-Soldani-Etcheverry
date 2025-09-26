@@ -12,10 +12,18 @@ int main(int argsc, char *args[])
     int OK=0;
     init_MV(&MV, &OK, CONTROL,VERSION, argsc, args);
     if (OK) {    //VALIDADO
-        init_regs(&MV);  
+        init_regs(&MV);
         init_funciones(&MV);
         printf("\n");
+        MV.DISSASEMBLER=1;
+        if (MV.DISSASEMBLER){
+            ejecucion(&MV);
+            init_regs(&MV);
+            printf("\n");
+            MV.DISSASEMBLER=0;
+        }
         ejecucion(&MV);
+       
     }
 
     printf("\n FIN DE PROCESO.");
