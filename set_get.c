@@ -10,7 +10,7 @@ int get(tMV *MV, int OP) {
     int regcod, offset;
     int inicio,cantbytes;
 
-    tipo = OP>>24;   
+    tipo = OP>>24;
 
     if (tipo==INM){
         valor = OP &0XFFFF;
@@ -19,21 +19,20 @@ int get(tMV *MV, int OP) {
     }else if (tipo==REG){
         regcod= OP & 0x1F;
         valor = MV->REGS[regcod].dato;
-
-    } 
+    }
      else {
         acceso_mem(MV,OP);
         cantbytes = ((MV->REGS[MAR].dato & 0xFFFF0000)>>16);
         inicio= ((MV->REGS[MAR].dato & 0xFFFF));
 
-        if ( (inicio+cantbytes) >= (MV->SEGMENTTABLE[baseDS]&0xFFFF) || inicio < ((MV->SEGMENTTABLE[baseDS]>>16) & 0XFFFF))
-            segmentationfault();
+        /*if ( (inicio+cantbytes) >= (MV->SEGMENTTABLE[baseDS]&0xFFFF))
+            segmentationfault();*/
 
         for (i = inicio ; i < inicio+cantbytes; i++) {
             valor = (valor << 8) | (MV->MEMORIA[i]);
         }
 
-        valor = MV->REGS[MBR].dato;
+        MV->REGS[MBR].dato = valor;
     }
     if (valor & NMASK32)
         valor = (valor ^ NMASK32) - NMASK32;
@@ -53,7 +52,6 @@ int getIP (tMV *MV) {
 
     if (valor & NMASK16)
         valor= (valor ^ NMASK16) - NMASK16;
-
 
     return valor;
 
@@ -76,18 +74,18 @@ void set(tMV *MV, int OP, int valorNuevo) {
         cantbytes = ((MV->REGS[MAR].dato & 0xFFFF0000)>>16);
         inicio= ((MV->REGS[MAR].dato & 0xFFFF))-1;
 
-        if ( (inicio+cantbytes) >= (MV->SEGMENTTABLE[baseDS]&0xFFFF) || inicio < ((MV->SEGMENTTABLE[baseDS]>>16) & 0XFFFF))
-            segmentationfault();
+        /*if ( (inicio+cantbytes) >= (MV->SEGMENTTABLE[baseDS]&0xFFFF))
+            segmentationfault();*/
 
         MV->REGS[MBR].dato = valorNuevo;
 
         for(i= inicio + cantbytes ; cantbytes > 0; cantbytes --){
-            MV->MEMORIA[i] = valorNuevo & 0xFF;   
-            valorNuevo = valorNuevo >> 8;         
+            MV->MEMORIA[i] = valorNuevo & 0xFF;
+            valorNuevo = valorNuevo >> 8;
             i--;
         }
     }
-    else //INMEDIATO, ERROR  
+    else //INMEDIATO, ERROR
         invalidfunction();
 }
 
@@ -98,20 +96,20 @@ int getsys(tMV *MV) {
         cantbytes = ((MV->REGS[MAR].dato & 0xFFFF0000)>>16);
         inicio= ((MV->REGS[MAR].dato & 0xFFFF));
 
-        if ( (inicio+cantbytes) >= (MV->SEGMENTTABLE[baseDS]&0xFFFF) || inicio < ((MV->SEGMENTTABLE[baseDS]>>16) & 0XFFFF))
-            segmentationfault();
+        /*if ( (inicio+cantbytes) >= (MV->SEGMENTTABLE[baseDS]&0xFFFF))
+            segmentationfault();*/
 
-        else {
             for(i = inicio ; cantbytes > 0; cantbytes--){
                 valor = valor<<8;
                 valor |= MV->MEMORIA[i];
                 i++;
             }
-        }
+        
+
 
     MV->REGS[MBR].dato = valor;
     return MV->REGS[MBR].dato;
-    
+
 }
 
 
@@ -122,21 +120,20 @@ void setsys(tMV *MV, int valorNuevo) {
         cantbytes = ((MV->REGS[MAR].dato & 0xFFFF0000)>>16);
         inicio= ((MV->REGS[MAR].dato & 0xFFFF))-1;
 
-        if ( (inicio+cantbytes) >= (MV->SEGMENTTABLE[baseDS]&0xFFFF) || inicio < ((MV->SEGMENTTABLE[baseDS]>>16) & 0XFFFF))
-            segmentationfault();
-
-        else {
+        /*if ( (inicio+cantbytes) >= (MV->SEGMENTTABLE[baseDS]&0xFFFF))
+            segmentationfault();*/
 
         MV->REGS[MBR].dato = valorNuevo;
+        
         for(i= inicio + cantbytes ; cantbytes > 0; cantbytes --){
-            MV->MEMORIA[i] = valorNuevo & 0xFF;   
-                valorNuevo = valorNuevo >> 8;         
+            MV->MEMORIA[i] = valorNuevo & 0xFF;
+                valorNuevo = valorNuevo >> 8;
             i--;
         }
 
-    }
-
 }
+
+
 
 
 

@@ -1,13 +1,14 @@
 #pragma once
 
-#define NOMBREARCHIVO "sample.vmx"
+//#define NOMBREARCHIVO "sample1.vmx"
 
 #define TABLA_N 8
 #define NMASK16 0x8000
 #define NMASK32 0x8000000000
 #define RAM 16328
 
-#define baseCS 0 
+//CODIGOS DE SEGMENTO
+#define baseCS 0
 #define baseDS 1
 
 struct tMV;

@@ -43,10 +43,10 @@ void init_regs(tMV *MV){
     int i;
     for (i=0;i<32;i++)
         MV->REGS[i].dato=0;
-    
-    MV->REGS[IP].dato = MV->REGS[CS].dato = (MV->SEGMENTTABLE[0]>>16)&0xFFFF;
 
-    MV->REGS[DS].dato = (MV->SEGMENTTABLE[1]>>16)&0xFFFF;
+    MV->REGS[IP].dato = MV->REGS[CS].dato = (baseCS<<16);
+
+    MV->REGS[DS].dato = (baseDS<<16);
 
     strcpy(MV->REGS[LAR].nombre, "LAR");
     strcpy(MV->REGS[MAR].nombre, "MAR");
@@ -89,16 +89,16 @@ void setCodeSegment(FILE *arch, tMV *MV) {
     int i,aux;
     for (i=0; i<MV->CSsize ;i++){
         fread(&aux,1,1,arch);
-         /*  
+        /*
         printf("%3x",aux);
-        if (i>0 && i%15 == 0)
+        if (i>0 && i%15 == 0)       //escribe lo que lee del .vmx
             printf("\n");
         */
         MV->MEMORIA[i]=aux;
     }
 }
 
-void init_MV(tMV *MV, int *OK, int CONTROL[], int VERSION, int argsc, char *args[]) {
+void init_MV(tMV *MV, int *OK, int CONTROL[], int VERSION, int argsc, char *args[],char NOMBREARCHIVO[]) {
 
     FILE *arch = fopen(NOMBREARCHIVO,"rb");
     int aux,i=0;
@@ -119,15 +119,15 @@ void init_MV(tMV *MV, int *OK, int CONTROL[], int VERSION, int argsc, char *args
                     printf("\n VERSION NO SOPORTADA!");
                 else { //VALIDO
 
-                    (*OK)=1; 
+                    (*OK)=1;
                     fread(&aux,1,1,arch);(MV->CSsize)+=aux;
                     fread(&aux,1,1,arch);(MV->CSsize)+=aux;
-                    if (argsc > 1 && strcmp(args[1], "-d") == 0) 
+                    if (argsc > 2 && strcmp(args[2], "-d") == 0)
                         MV->DISSASEMBLER=1;
                     else
                         MV->DISSASEMBLER=0;
-                    setCodeSegment(arch, MV);
                     setSegmentTable(MV);
+                    setCodeSegment(arch, MV);
                 }
             }
             fclose(arch);
