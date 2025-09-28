@@ -25,8 +25,8 @@ int get(tMV *MV, int OP) {
         cantbytes = ((MV->REGS[MAR].dato & 0xFFFF0000)>>16);
         inicio= ((MV->REGS[MAR].dato & 0xFFFF));
 
-        if ( (inicio+cantbytes) >= (MV->SEGMENTTABLE[baseDS]&0xFFFF))
-            segmentationfault();
+        /*if ( (inicio+cantbytes) >= (MV->SEGMENTTABLE[baseDS]&0xFFFF))
+            segmentationfault();*/
 
         for (i = inicio ; i < inicio+cantbytes; i++) {
             valor = (valor << 8) | (MV->MEMORIA[i]);
@@ -53,7 +53,6 @@ int getIP (tMV *MV) {
     if (valor & NMASK16)
         valor= (valor ^ NMASK16) - NMASK16;
 
-
     return valor;
 
 }
@@ -75,8 +74,8 @@ void set(tMV *MV, int OP, int valorNuevo) {
         cantbytes = ((MV->REGS[MAR].dato & 0xFFFF0000)>>16);
         inicio= ((MV->REGS[MAR].dato & 0xFFFF))-1;
 
-        if ( (inicio+cantbytes) >= (MV->SEGMENTTABLE[baseDS]&0xFFFF))
-            segmentationfault();
+        /*if ( (inicio+cantbytes) >= (MV->SEGMENTTABLE[baseDS]&0xFFFF))
+            segmentationfault();*/
 
         MV->REGS[MBR].dato = valorNuevo;
 
@@ -97,16 +96,15 @@ int getsys(tMV *MV) {
         cantbytes = ((MV->REGS[MAR].dato & 0xFFFF0000)>>16);
         inicio= ((MV->REGS[MAR].dato & 0xFFFF));
 
-        if ( (inicio+cantbytes) >= (MV->SEGMENTTABLE[baseDS]&0xFFFF))
-            segmentationfault();
+        /*if ( (inicio+cantbytes) >= (MV->SEGMENTTABLE[baseDS]&0xFFFF))
+            segmentationfault();*/
 
-        else {
             for(i = inicio ; cantbytes > 0; cantbytes--){
                 valor = valor<<8;
                 valor |= MV->MEMORIA[i];
                 i++;
             }
-        }
+        
 
 
     MV->REGS[MBR].dato = valor;
@@ -122,21 +120,20 @@ void setsys(tMV *MV, int valorNuevo) {
         cantbytes = ((MV->REGS[MAR].dato & 0xFFFF0000)>>16);
         inicio= ((MV->REGS[MAR].dato & 0xFFFF))-1;
 
-        if ( (inicio+cantbytes) >= (MV->SEGMENTTABLE[baseDS]&0xFFFF))
-            segmentationfault();
-
-        else {
+        /*if ( (inicio+cantbytes) >= (MV->SEGMENTTABLE[baseDS]&0xFFFF))
+            segmentationfault();*/
 
         MV->REGS[MBR].dato = valorNuevo;
+        
         for(i= inicio + cantbytes ; cantbytes > 0; cantbytes --){
             MV->MEMORIA[i] = valorNuevo & 0xFF;
                 valorNuevo = valorNuevo >> 8;
             i--;
         }
 
-    }
-
 }
+
+
 
 
 

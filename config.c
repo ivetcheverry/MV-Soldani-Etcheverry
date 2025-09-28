@@ -98,7 +98,7 @@ void setCodeSegment(FILE *arch, tMV *MV) {
     }
 }
 
-void init_MV(tMV *MV, int *OK, int CONTROL[], int VERSION, int argsc, char *args[]) {
+void init_MV(tMV *MV, int *OK, int CONTROL[], int VERSION, int argsc, char *args[],char NOMBREARCHIVO[]) {
 
     FILE *arch = fopen(NOMBREARCHIVO,"rb");
     int aux,i=0;
@@ -122,7 +122,7 @@ void init_MV(tMV *MV, int *OK, int CONTROL[], int VERSION, int argsc, char *args
                     (*OK)=1;
                     fread(&aux,1,1,arch);(MV->CSsize)+=aux;
                     fread(&aux,1,1,arch);(MV->CSsize)+=aux;
-                    if (argsc > 1 && strcmp(args[1], "-d") == 0)
+                    if (argsc > 2 && strcmp(args[2], "-d") == 0)
                         MV->DISSASEMBLER=1;
                     else
                         MV->DISSASEMBLER=0;

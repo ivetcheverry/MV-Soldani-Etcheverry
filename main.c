@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "const.h"
 #include "functions.h"
 
@@ -9,21 +10,23 @@ int main(int argsc, char *args[])
     tMV MV;
     int VERSION = 1;
     int CONTROL[] = { 'V','M','X','2','5' };
+    char NOMBREARCHIVO[15];
     int OK=0;
-    init_MV(&MV, &OK, CONTROL,VERSION, argsc, args);
-    if (OK) {    //VALIDADO
-        init_regs(&MV);
-        init_funciones(&MV);
-        printf("\n");
-        MV.DISSASEMBLER=1;
-        if (MV.DISSASEMBLER){
-            ejecucion(&MV);
+    if (argsc>1) {
+        strcpy(NOMBREARCHIVO,args[1]);
+        init_MV(&MV, &OK, CONTROL,VERSION, argsc, args, NOMBREARCHIVO);
+        if (OK) {    //VALIDADO
             init_regs(&MV);
+            init_funciones(&MV);
             printf("\n");
-            MV.DISSASEMBLER=0;
-        }
-        ejecucion(&MV);
-       
+            if (MV.DISSASEMBLER){
+                ejecucion(&MV);
+                init_regs(&MV);
+                printf("\n");
+                MV.DISSASEMBLER=0;
+            }
+            ejecucion(&MV); 
+        }   
     }
 
     printf("\n FIN DE PROCESO.");
