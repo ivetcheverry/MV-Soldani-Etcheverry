@@ -1,6 +1,6 @@
 #pragma once
 
-//#define NOMBREARCHIVO "sample1.vmx"
+#define NOMBREARCHIVO "sample5.vmx"
 
 #define TABLA_N 8
 #define NMASK16 0x8000
@@ -8,8 +8,14 @@
 #define RAM 16328
 
 //CODIGOS DE SEGMENTO
-#define baseCS 0
-#define baseDS 1
+
+#define basePS 0
+#define baseKS 1
+#define baseCS 2
+#define baseDS 3
+#define baseES 4
+#define baseSS 5
+
 
 struct tMV;
 
@@ -26,6 +32,7 @@ typedef struct treg{
 typedef struct tMV {
     int CSsize;
     int SEGMENTTABLE[TABLA_N];
+    int breakpoint;
 
     int MEMORIA[RAM];
     tfunc FUNCIONES[32];
@@ -71,9 +78,13 @@ typedef struct tMV {
 #define JNP  6
 #define JNN  7
 #define NOT_ 8
+#define PUSH 11
+#define POP 12
+#define CALL_ 13
 
 // Sin operandos
 #define STOP 15
+#define RET 14
 
 //REGISTROS
 // Acceso a memoria
@@ -88,8 +99,8 @@ typedef struct tMV {
 #define OP2   6
 
 // Reservados
-#define REG7  7
-#define REG8  8
+#define SP  7
+#define BP  8
 #define REG9  9
 
 // Registros de propósito general

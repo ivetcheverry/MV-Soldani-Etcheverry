@@ -5,7 +5,7 @@
 
 
 void mostrar(tMV *MV, int OP, int j);
-void init_MV(tMV *MV, int *OK, int CONTROL[], int VERSION, int argsc, char *args[], char NOMBREARCHIVO[]);
+void init_MV(tMV *MV, int *OK, int CONTROL[], int VERSION, int argsc, char *args[]);//, char NOMBREARCHIVO[]);
 
 void setSegmentTable(tMV *MV);
 void setCodeSegment(FILE *arch,tMV *MV);
@@ -24,6 +24,11 @@ void setCC(tMV *MV, int ultvalor);
 void setsys(tMV *MV, int valorNuevo);
 int getsys(tMV *MV);
 
+// 0 OPERANDOS
+void stop(tMV *MV);
+void ret(tMV *MV);
+
+// 1 OPERANDO
 void sys(tMV *MV);
 void jmp(tMV *MV);
 void jz(tMV *MV);
@@ -33,7 +38,12 @@ void jnn(tMV *MV);
 void jp(tMV *MV);
 void jnp(tMV *MV);
 void not_(tMV *MV);
+void pop(tMV *MV);
+void push(tMV *MV);
+void call_(tMV *MV);
 
+
+// 2 OPERANDOS
 void mov(tMV *MV);
 void add(tMV *MV);
 void sub(tMV *MV);
@@ -42,9 +52,6 @@ void div_(tMV *MV);
 void cmp(tMV *MV);
 void shl(tMV *MV);
 void shr(tMV *MV);
-
-void stop(tMV *MV);
-
 void sar(tMV *MV);
 void and(tMV *MV);
 void or(tMV *MV);

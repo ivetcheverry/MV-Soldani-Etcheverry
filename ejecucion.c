@@ -9,6 +9,7 @@ void acceso_mem (tMV *MV, int OP){
     int cantbytes=0; int inicio=0;
     int base_segmento, size_segmento;
     
+    
     if ( ( (OP & 0xFF000000) >>24 ) == 3) {  
         regcod = (OP & 0xFF0000) >> 16;
         offset=  (OP & 0xFFFF);
@@ -60,6 +61,7 @@ void ejecucion(tMV *MV){
 
     int top1, top2, opcod, i,j, ipvalor, valor;
     ipvalor = getIP(MV);
+    MV->DISSASEMBLER=1;
     while(ipvalor<MV->CSsize && ipvalor>=0) {
         valor=MV->MEMORIA[ipvalor];          
         MV->REGS[OP2].dato=MV->REGS[OP1].dato=0;

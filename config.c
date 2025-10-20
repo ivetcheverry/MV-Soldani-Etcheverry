@@ -36,6 +36,11 @@ void init_funciones(tMV *MV){
   strcpy(MV->FUNCIONES[LDH].nombre,  "LDH");   MV->FUNCIONES[LDH].func  = ldh;
   strcpy(MV->FUNCIONES[RND].nombre,  "RND");   MV->FUNCIONES[RND].func  = rnd;
 
+  strcpy(MV->FUNCIONES[PUSH].nombre,  "PUSH");   MV->FUNCIONES[RND].func  = push;
+  strcpy(MV->FUNCIONES[POP].nombre,  "POP");   MV->FUNCIONES[RND].func  = pop;
+  strcpy(MV->FUNCIONES[CALL_].nombre,  "CALL");   MV->FUNCIONES[RND].func  = call_;
+  strcpy(MV->FUNCIONES[RET].nombre,  "RET");   MV->FUNCIONES[RND].func  = ret;
+
 }
 
 
@@ -56,6 +61,10 @@ void init_regs(tMV *MV){
     strcpy(MV->REGS[OPC].nombre, "OPC");
     strcpy(MV->REGS[OP1].nombre, "OP1");
     strcpy(MV->REGS[OP2].nombre, "OP2");
+
+    //PILA
+    strcpy(MV->REGS[SP].nombre, "SP");
+    strcpy(MV->REGS[BP].nombre, "BP");
 
     // Bloque de registros generales
     strcpy(MV->REGS[EAX].nombre, "EAX");
@@ -98,7 +107,7 @@ void setCodeSegment(FILE *arch, tMV *MV) {
     }
 }
 
-void init_MV(tMV *MV, int *OK, int CONTROL[], int VERSION, int argsc, char *args[],char NOMBREARCHIVO[]) {
+void init_MV(tMV *MV, int *OK, int CONTROL[], int VERSION, int argsc, char *args[]){//,char ANOMBREARCHIVO[]) {
 
     FILE *arch = fopen(NOMBREARCHIVO,"rb");
     int aux,i=0;
@@ -112,7 +121,7 @@ void init_MV(tMV *MV, int *OK, int CONTROL[], int VERSION, int argsc, char *args
             }
             if (i<5){
                 printf("\n ERROR, ARCHIVO NO VALIDO!");
-            }
+            }   
             else{//CONTROLO VERSION
                 //printf("\n VERSION: %d \n\n", aux);
                 if (aux!=VERSION)
@@ -122,6 +131,7 @@ void init_MV(tMV *MV, int *OK, int CONTROL[], int VERSION, int argsc, char *args
                     (*OK)=1;
                     fread(&aux,1,1,arch);(MV->CSsize)+=aux;
                     fread(&aux,1,1,arch);(MV->CSsize)+=aux;
+                    MV->breakpoint=0;
                     if (argsc > 2 && strcmp(args[2], "-d") == 0)
                         MV->DISSASEMBLER=1;
                     else
