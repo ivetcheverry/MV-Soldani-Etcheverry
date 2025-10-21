@@ -245,42 +245,31 @@ void not_(tMV *MV)
     setCC(MV, get(MV, MV->REGS[OP2].dato));
 }
 
-void pop (tMV *MV){
-    int valor;
-    int addr = MV->REGS[SP].dato;
+void pop(tMV *MV, int OP1) {
+    int sp_val = MV->REGS[SP].dato & 0xFFFF;    // offset dentro del stack segment (en palabras)
+    int ss_index = MV->REGS[SS].dato >> 16;     // índice del segmento de pila
+    int ss_base  = (MV->SEGMENTTABLE[ss_index] >> 16) & 0xFFFF;
+    int ss_limit = MV->SEGMENTTABLE[ss_index] & 0xFFFF;
 
-    // ?? y SEGMENTTABLE[baseSS + 1] el fin (opcional)
-    if (addr + 4 > MV->SEGMENTTABLE[baseSS + 1])
-        stackunderflow();
-
-    //  Extraer los 4 bytes (MSB -> LSB)
-    valor =  (MV->MEMORIA[addr]     << 24)
-           | (MV->MEMORIA[addr + 1] << 16)
-           | (MV->MEMORIA[addr + 2] << 8)
-           | (MV->MEMORIA[addr + 3]);
-
-    // Si el operando es de 16 bits u otro, se truncan los bytes más altos
-    int tipo = MV->REGS[OP2].dato >> 24;
-
-
-    /*
-    if (tipo == REG) {
-        // Ejemplo: si es registro de 16 bits, truncamos
-        if ( es registro de 16 bits)
-            valor &= 0xFFFF;
-    } else if (tipo == MEMO) {
-        // Si destino es una palabra (w[...]) truncamos igual
-        if ( es operando de 2 bytes )
-            valor &= 0xFFFF;
+    // Verificar underflow
+    if (sp_val >= ss_limit) {
+        stack_underflow();
     }
-    */
 
-    
-    set(MV, MV->REGS[OP2].dato, valor);
-    MV->REGS[SP].dato += 4;
+    // Leer el valor (entero de 4 bytes)
+    int valor = MV->MEMORIA[ss_base + sp_val];
+
+    // Obtengo el valor y se lo doy a EAX
+    MV->REGS[EAX].dato= get(MV, OP1);
+
+    // Incrementar SP en 1 palabra (4 bytes)
+    sp_val += 1;
+    MV->REGS[SP].dato = (MV->REGS[SP].dato & 0xFFFF0000) | sp_val;
+
 }
 
-void push (tMV *MV) {
+
+/* void push (tMV *MV) {
     int valor;
 
     MV->REGS[SP].dato -=4;
@@ -301,7 +290,48 @@ void push (tMV *MV) {
 
 
 
+} */
+
+void push(tMV *MV, int OP) {
+    int valor;
+
+    // Obtener info del stack segment
+    int segIndex = (MV->REGS[SS].dato >> 16);
+    int segDesc = MV->SEGMENTTABLE[segIndex];
+    int baseSS = (segDesc >> 16) & 0xFFFF;
+    int tamanioSS = segDesc & 0xFFFF;
+
+    // Leer SP actual
+    int offsetSP = MV->REGS[SP].dato & 0xFFFF;
+
+    // Decrementar SP en 4
+    offsetSP -= 4;
+
+    // Verificar overflow
+    if (offsetSP < 0) {
+        stack_overflow();
+    }
+
+    // Obtener valor del operando
+    valor = get(MV, OP);
+
+    // Extender signo a 32 bits si es 16 bits con signo
+    if (valor & 0x8000)
+        valor |= 0xFFFF0000;
+
+    // Escribir en la pila (MSB → LSB)
+   /* int addr = baseSS + offsetSP;
+    MV->MEMORIA[addr]     = (valor >> 24) & 0xFF;
+    MV->MEMORIA[addr + 1] = (valor >> 16) & 0xFF;
+    MV->MEMORIA[addr + 2] = (valor >> 8) & 0xFF;
+    MV->MEMORIA[addr + 3] = valor & 0xFF; */
+
+    set(MV, OP, valor);
+
+    // Actualizar SP
+    MV->REGS[SP].dato = (segIndex << 16) | offsetSP;
 }
+
 
 void call (tMV *MV) {
     /*
@@ -309,9 +339,9 @@ void call (tMV *MV) {
     En OP2 guardamos el IP que teniamos antes de ejecutar subrutina para asi reutilizar el push
     por ultimo seteamos IP con la direccion de la subrutina.
     */
-    int aux = MV->REGS[OP2].dato; 
-    MV->REGS[OP2].dato = MV->REGS[IP].dato; 
-    push(MV); 
+    int aux = MV->REGS[OP2].dato;
+    MV->REGS[OP2].dato = MV->REGS[IP].dato;
+    push(MV);
     MV->REGS[IP].dato = aux;
 }
 
@@ -500,5 +530,17 @@ void invalidfunction()
 void divisionzero()
 {
     printf("\nERROR! DIVISION POR CERO!");
+    exit(1);
+}
+
+void stack_overflow()
+{
+    printf("\nERROR! STACK OVERFLOW!");
+    exit(1);
+}
+
+void stack_underflow()
+{
+    printf("\nERROR! STACK UNDERFLOW!");
     exit(1);
 }
