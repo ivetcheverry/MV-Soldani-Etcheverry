@@ -7,15 +7,6 @@
 #define NMASK32 0x8000000000
 #define RAM 16328
 
-//CODIGOS DE SEGMENTO
-
-#define basePS 0
-#define baseKS 1
-#define baseCS 2
-#define baseDS 3
-#define baseES 4
-#define baseSS 5
-
 
 struct tMV;
 
@@ -30,9 +21,9 @@ typedef struct treg{
 }treg;
 
 typedef struct tMV {
-    int CSsize;
     int SEGMENTTABLE[TABLA_N];
-    int breakpoint;
+    int entrypoint;
+    int ver;
 
     int MEMORIA[RAM];
     tfunc FUNCIONES[32];
@@ -128,11 +119,9 @@ typedef struct tMV {
 #define REG25 25
 
 // Segmentos
-#define CS    26
-#define DS    27
-
-// Reservados
-#define REG28 28
-#define REG29 29
-#define REG30 30
-#define REG31 31
+#define CS 26
+#define DS 27
+#define ES 28
+#define SS 29
+#define KS 30
+#define PS 31
