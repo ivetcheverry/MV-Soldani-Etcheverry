@@ -5,7 +5,7 @@
 #define TABLA_N 8
 #define NMASK16 0x8000
 #define NMASK32 0x8000000000
-#define RAM 16328
+#define RAMDEFAULT 16328
 
 
 struct tMV;
@@ -21,14 +21,19 @@ typedef struct treg{
 }treg;
 
 typedef struct tMV {
-    int SEGMENTTABLE[TABLA_N];
-    int entrypoint;
-    int ver;
+    int VERSION;
+    
+    //parametros o flags obtenidos como parametros
+    int MEM;
+    int PARAM;
+    int DISSASEMBLER;
+    char *NOMBREIMAGEN;
 
-    int MEMORIA[RAM];
+    int SEGMENTTABLE[TABLA_N];
+    int MEMORIA[RAMDEFAULT];
     tfunc FUNCIONES[32];
     treg REGS[32];
-    int DISSASEMBLER;
+    
 }tMV;
 
 

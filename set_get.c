@@ -31,7 +31,7 @@ int get(tMV *MV, int OP) {
             valor = (valor << 8) | (MV->MEMORIA[i]);
         }
 
-       // Extensión de signo automática según el tamaño leído
+       // Extensiï¿½n de signo automï¿½tica segï¿½n el tamaï¿½o leï¿½do
         int signo_mask = 1 << ((cantbytes * 8) - 1);
         int extend_mask = ~((1 << (cantbytes * 8)) - 1);
         if (valor & signo_mask)

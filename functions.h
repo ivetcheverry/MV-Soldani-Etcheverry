@@ -5,12 +5,16 @@
 
 
 void mostrar(tMV *MV, int OP, int j);
-void init_MV(tMV *MV, int *OK, int CONTROL[], int VERSION1,int VERSION2, int argsc, char *args[]);//, char NOMBREARCHIVO[]);
+void init_MV(tMV *MV, int *OK, int CONTROL[], int argsc, char *args[]);//, char NOMBREARCHIVO[]);
 
-void setTabla(tMV *MV, FILE *arch,int sizePS, int PSpointer);
+void addsegmento(tMV *MV, int inicio, int tamano, int pos);
+
 void setParamSegment(tMV *MV, int argsc, char *args[],int *,int *);
-void setSegmentTable(tMV *MV);
+void setSegmentTable(tMV *MV, FILE *arch);
 void setCodeSegment(FILE *arch,tMV *MV);
+
+int getdireccionfisica(tMV *MV, int Puntero);
+int getdireccionfisica(tMV *MV, int Puntero);
 
 void init_regs(tMV *MV);
 void init_funciones(tMV *MV);

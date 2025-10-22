@@ -53,7 +53,7 @@ void stop(tMV *MV)
 {
     printf("\n\n STOP ejecutado. Deteniendo la máquina virtual.");
 
-    MV->REGS[IP].dato = baseCS << 16;
+    MV->REGS[IP].dato = 0;
     MV->REGS[IP].dato |= 0XFFFF;
 }
 
@@ -260,7 +260,7 @@ void pop(tMV *MV) {
     int valor = MV->MEMORIA[ss_base + sp_val];
 
     // Obtengo el valor y se lo doy a EAX
-    MV->REGS[EAX].dato= get(MV, MV->regs[OP2].dato);
+    MV->REGS[EAX].dato= get(MV, MV->REGS[OP2].dato);
 
     // Incrementar SP en 1 palabra (4 bytes)
     sp_val += 1;
@@ -313,7 +313,7 @@ void push(tMV *MV) {
     }
 
     // Obtener valor del operando
-    valor = get(MV, MV->regs[OP2].dato);
+    valor = get(MV, MV->REGS[OP2].dato);
 
     // Extender signo a 32 bits si es 16 bits con signo
     if (valor & 0x8000)
@@ -326,7 +326,7 @@ void push(tMV *MV) {
     MV->MEMORIA[addr + 2] = (valor >> 8) & 0xFF;
     MV->MEMORIA[addr + 3] = valor & 0xFF; */
 
-    set(MV, MV->regs[OP2].dato, valor);
+    set(MV, MV->REGS[OP2].dato, valor);
 
     // Actualizar SP
     MV->REGS[SP].dato = (segIndex << 16) | offsetSP;

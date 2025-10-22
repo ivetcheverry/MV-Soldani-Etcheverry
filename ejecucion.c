@@ -42,7 +42,7 @@ void acceso_mem (tMV *MV, int OP){
     if(sys)
         MV->REGS[MAR].dato = (MV->REGS[ECX].dato & 0XFFFF0000) >> 16;
     else
-        MV->REGS[MAR].dato= 0x0 | get_tipo_mem(MV->regs[OP2].dato);    //obtengo cantidad de bytes a escribir/leer en memoria
+        MV->REGS[MAR].dato= 0x0 | get_tipo_mem(MV->REGS[OP2].dato);    //obtengo cantidad de bytes a escribir/leer en memoria
 
     MV->REGS[MAR].dato = MV->REGS[MAR].dato << 16;
 
@@ -71,6 +71,7 @@ void ejecucion(tMV *MV){
     int top1, top2, opcod, i,j, ipvalor, valor;
     ipvalor = getIP(MV);
     MV->DISSASEMBLER=1;
+    
     while(ipvalor<MV->CSsize && ipvalor>=0) {
         valor=MV->MEMORIA[ipvalor];
         MV->REGS[OP2].dato=MV->REGS[OP1].dato=0;

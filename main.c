@@ -8,13 +8,16 @@
 int main(int argsc, char *args[])
 {
     tMV MV;
-    int VERSION1 = 1, VERSION2 = 2;
     int CONTROL[] = { 'V','M','X','2','5' };
+
+    char *extension;
+    
+
     //char NOMBREARCHIVO[15];
     int OK=0;
-    //if (argsc>1) {
+    if (argsc>1) {
         //strcpy(NOMBREARCHIVO,args[1]);
-        init_MV(&MV, &OK, CONTROL,VERSION1,VERSION2, argsc, args);//, NOMBREARCHIVO);
+        init_MV(&MV, &OK, CONTROL, argsc, args);//, NOMBREARCHIVO);
         if (OK) {    //VALIDADO
             init_regs(&MV);
             init_funciones(&MV);
@@ -27,7 +30,7 @@ int main(int argsc, char *args[])
             }
             ejecucion(&MV); 
         }   
-    //}
+    }
 
     printf("\n FIN DE PROCESO.");
     return 0;
