@@ -57,9 +57,15 @@ void stop(tMV *MV)
     MV->REGS[IP].dato |= 0XFFFF;
 }
 
-void ret(tMV *MV){
+void ret (tMV *MV){
 
+    pop(MV);
+    //devuelto en EAX
+    MV->REGS[IP].dato=MV->REGS[EAX].dato;
 }
+
+
+
 
 // 1 OPERANDO ---------------------------------------------------------------
 void sys(tMV *MV)
@@ -150,12 +156,81 @@ void sys(tMV *MV)
             }
             break;
         }
-        case 3:
+        case 3:     //string read
         {
+            printf("[%04X]  ", MV->REGS[MAR].dato & 0XFFFF);
+
+            char buffer[512]; // limite razonable
+            int len = 0;
+
+            fflush(stdout);
+            if (fgets(buffer, sizeof(buffer), stdin) == NULL)
+                return;
+
+            // Reemplazar '\n' por '\0'
+            buffer[strcspn(buffer, "\n")] = '\0';
+
+            // Máximo de caracteres a leer
+            int max_len = MV->REGS[ECX].dato;
+
+            if (max_len == -1)
+                max_len = strlen(buffer);
+            else if (max_len > (int)strlen(buffer))
+                max_len = strlen(buffer);
+
+            // Obtener dirección lógica desde EDX
+            int seg_idx = (MV->REGS[EDX].dato >> 16) & 0xFFFF;
+            int offset = MV->REGS[EDX].dato & 0xFFFF;
+
+            // Validar segmento
+            if (seg_idx < 0 || seg_idx > (MV->REGS[SS].dato >> 16))
+                segmentationfault();
+
+            // Dirección física real
+            int base_fisica = ((MV->SEGMENTTABLE[seg_idx] >> 16) & 0xFFFF) + offset;
+
+            // Chequeo de overflow del segmento
+            int seg_tam = MV->SEGMENTTABLE[seg_idx] & 0xFFFF;
+            if ((offset + max_len + 1) > seg_tam)
+                segmentationfault();
+
+            // Escribir en memoria byte a byte
+            fgets(buffer, max_len, stdin);
+
+            setsys_buffer(MV, buffer, strlen(buffer));
+
             break;
         }
-        case 4:
+        case 4:         //string write
         {
+
+            // Obtener dirección lógica desde EDX
+            int seg_idx = (MV->REGS[EDX].dato >> 16) & 0xFFFF;
+            int offset  = MV->REGS[EDX].dato & 0xFFFF;
+
+            // Validar segmento
+            if (seg_idx < 0 || seg_idx > (MV->REGS[SS].dato >> 16))
+                segmentationfault();
+
+            // Dirección física base
+            int base_fisica = ((MV->SEGMENTTABLE[seg_idx] >> 16) & 0xFFFF) + offset;
+
+            // Tamaño del segmento
+            int seg_tam = MV->SEGMENTTABLE[seg_idx] & 0xFFFF;
+
+            // Obtener el string desde memoria (hasta '\0' o límite de segmento)
+            char buffer[512];
+            getsys_buffer(MV, buffer, base_fisica, seg_tam - offset);
+
+            // Imprimir
+            printf("%s", buffer);
+
+            // Actualizar MBR con último carácter leído
+            if (strlen(buffer) > 0)
+                MV->REGS[MBR].dato = (unsigned char) buffer[strlen(buffer) - 1];
+            else
+                MV->REGS[MBR].dato = 0;
+
             break;
         }
         case 7:
@@ -342,9 +417,9 @@ void call (tMV *MV) {
     int aux = MV->REGS[OP2].dato;
     MV->REGS[OP2].dato = MV->REGS[IP].dato;
     push(MV);
-    MV->REGS[IP].dato = aux;
+    //MV->REGS[IP].dato = aux;
+    jmp(MV);
 }
-
 
 
 

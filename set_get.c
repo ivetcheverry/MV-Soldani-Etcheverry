@@ -18,6 +18,27 @@ int get(tMV *MV, int OP) {
     }else if (tipo==REG){
         regcod= OP & 0x1F;
         valor = MV->REGS[regcod].dato;
+
+        opreg=(OP & 0b11000000)>>6;
+
+        switch (opreg) {
+            case 0b11:
+                valor=valor & 0xFFFF;           // AX
+                break;
+
+            case 0b10:
+                valor=(valor & 0xFF)>>8;        // AH
+                break;
+
+            case 0b01:
+                valor=valor & 0xFF;           // AL
+                break;
+
+            case 0b00:
+                valor=valor;                  //EAX
+                break;
+        }
+
     }
      else {
         acceso_mem(MV,OP);
@@ -40,7 +61,7 @@ int get(tMV *MV, int OP) {
         MV->REGS[MBR].dato = valor;
     }
 
-    return MV->REGS[MBR].dato;
+    return valor;
 
 }
 
@@ -69,6 +90,27 @@ void set(tMV *MV, int OP, int valorNuevo) {
     tipo = OP >>24;
 
     if (tipo==REG){
+
+        opreg=(OP & 0b11000000)>>6;
+
+        switch (opreg) {
+            case 0b11:
+                valorNuevo=valorNuevo & 0xFFFF;           // AX
+                break;
+
+            case 0b10:
+                valorNuevo=(valorNuevo & 0xFF)>>8;        // AH
+                break;
+
+            case 0b01:
+                valorNuevo=valorNuevo & 0xFF;           // AL
+                break;
+
+            case 0b00:
+                valorNuevo=valorNuevo;                  //EAX
+                break;
+        }
+
         regcod= OP & 0X1F;
         MV->REGS[regcod].dato = valorNuevo;
     }
@@ -116,6 +158,23 @@ int getsys(tMV *MV) {
 }
 
 
+void getsys_buffer(tMV *MV, char *buffer, int inicio, int max_len) {
+    int i = 0;
+
+    // Leer desde memoria hasta '\0' o fin de segmento o límite máximo
+    while (i < max_len) {
+        unsigned char c = MV->MEMORIA[inicio + i];
+        buffer[i] = c;
+        if (c == '\0') break;
+        i++;
+    }
+
+    // Asegurar fin de cadena
+    buffer[i] = '\0';
+}
+
+
+
 void setsys(tMV *MV, int valorNuevo) {
     int i, tipo, valor;
     int inicio,cantbytes;
@@ -134,6 +193,31 @@ void setsys(tMV *MV, int valorNuevo) {
             i--;
         }
 
+}
+
+
+void setsys_buffer(tMV *MV, char *buffer, int length) {
+    int inicio, cantbytes;
+
+    // Obtener datos de MAR (inicio y cantidad)
+    cantbytes = ((MV->REGS[MAR].dato & 0xFFFF0000) >> 16);
+    inicio = ((MV->REGS[MAR].dato & 0xFFFF));
+
+    // Si ECX = -1 → cantbytes = 0xFFFF → sin límite
+    if (cantbytes == 0xFFFF || cantbytes == -1) {
+        cantbytes = length;  // usar la cantidad real leída
+    }
+
+    if (length > cantbytes) length = cantbytes;  // seguridad
+
+    // Escribir en memoria byte a byte
+    for (int i = 0; i < length; i++)
+        MV->MEMORIA[inicio + i] = (unsigned char) buffer[i];
+
+    MV->MEMORIA[inicio + length] = '\0';  // terminar string
+
+    // Actualizar MBR con último valor escrito (opcional)
+    MV->REGS[MBR].dato = (unsigned char) buffer[length - 1];
 }
 
 
