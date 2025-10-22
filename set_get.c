@@ -4,7 +4,6 @@
 #include "functions.h"
 
 
-
 int get(tMV *MV, int OP) {
     int tipo,valor=0,mask, byte_index, i;
     int regcod, offset;
@@ -32,12 +31,16 @@ int get(tMV *MV, int OP) {
             valor = (valor << 8) | (MV->MEMORIA[i]);
         }
 
+       // Extensión de signo automática según el tamaño leído
+        int signo_mask = 1 << ((cantbytes * 8) - 1);
+        int extend_mask = ~((1 << (cantbytes * 8)) - 1);
+        if (valor & signo_mask)
+            valor |= extend_mask;
+
         MV->REGS[MBR].dato = valor;
     }
-    if (valor & NMASK32)
-        valor = (valor ^ NMASK32) - NMASK32;
 
-    return valor;
+    return MV->REGS[MBR].dato;
 
 }
 
@@ -104,7 +107,7 @@ int getsys(tMV *MV) {
                 valor |= MV->MEMORIA[i];
                 i++;
             }
-        
+
 
 
     MV->REGS[MBR].dato = valor;
@@ -124,7 +127,7 @@ void setsys(tMV *MV, int valorNuevo) {
             segmentationfault();*/
 
         MV->REGS[MBR].dato = valorNuevo;
-        
+
         for(i= inicio + cantbytes ; cantbytes > 0; cantbytes --){
             MV->MEMORIA[i] = valorNuevo & 0xFF;
                 valorNuevo = valorNuevo >> 8;

@@ -4,45 +4,54 @@
 #include "functions.h"
 
 
+int get_tipo_mem(OP){
+    int valor=4;
+
+    OP=(OP&0x000000FF)>>6; //dos bits mas significativos del codigo de registro
+    valor-=OP;
+
+    return valor;
+}
+
 void acceso_mem (tMV *MV, int OP){
     int offset=0,regcod,base, sys=0;
     int cantbytes=0; int inicio=0;
     int base_segmento, size_segmento;
-    
-    
-    if ( ( (OP & 0xFF000000) >>24 ) == 3) {  
+
+
+    if ( ( (OP & 0xFF000000) >>24 ) == 3) {
         regcod = (OP & 0xFF0000) >> 16;
         offset=  (OP & 0xFFFF);
         if (offset & NMASK16)
         offset = (offset ^ NMASK16) - NMASK16;
-    }   
+    }
     else {      //SYS
-        regcod = EDX;                                       
+        regcod = EDX;
         sys=1;
-    }   
+    }
 
     base = ((MV->REGS[regcod].dato>>16 ) &0xFFFF);
 
-    if (base>=0 && base <2) {
-        MV->REGS[LAR].dato = base; 
-        MV->REGS[LAR].dato = MV->REGS[LAR].dato<<16; 
-        MV->REGS[LAR].dato |= ((offset + (MV->REGS[regcod].dato & 0XFFFF))&0xffff);  
+    if (base>=0 && base <= (MV->REGS[SS].dato >>16)) { //ya que siempre habra SS
+        MV->REGS[LAR].dato = base;
+        MV->REGS[LAR].dato = MV->REGS[LAR].dato<<16;
+        MV->REGS[LAR].dato |= ((offset + (MV->REGS[regcod].dato & 0XFFFF))&0xffff);
     } else
         segmentationfault();
-      
+
     if(sys)
         MV->REGS[MAR].dato = (MV->REGS[ECX].dato & 0XFFFF0000) >> 16;
-    else                                    
-        MV->REGS[MAR].dato=0x4;
+    else
+        MV->REGS[MAR].dato= 0x0 | get_tipo_mem(MV->regs[OP2].dato);    //obtengo cantidad de bytes a escribir/leer en memoria
 
-    MV->REGS[MAR].dato = MV->REGS[MAR].dato << 16; 
+    MV->REGS[MAR].dato = MV->REGS[MAR].dato << 16;
 
     MV->REGS[MAR].dato |= ( ( (MV->SEGMENTTABLE[( MV->REGS[LAR].dato>>16) & 0xFFFF])>>16 ) &0xFFFF) + (MV->REGS[LAR].dato & 0XFFFF );
 
     cantbytes = ((MV->REGS[MAR].dato & 0xFFFF0000)>>16);
-    inicio = ((MV->REGS[MAR].dato & 0xFFFF));    
+    inicio = ((MV->REGS[MAR].dato & 0xFFFF));
 
-    
+
     if  (inicio+cantbytes > (MV->SEGMENTTABLE[base]&0xFFFF)  +  ((MV->SEGMENTTABLE[base]>>16)&0xFFFF) || (inicio < ((MV->SEGMENTTABLE[base]>>16)&0xFFFF)) )
         segmentationfault();
 
@@ -56,14 +65,14 @@ void acceso_mem (tMV *MV, int OP){
 
 }
 
-    
+
 void ejecucion(tMV *MV){
 
     int top1, top2, opcod, i,j, ipvalor, valor;
     ipvalor = getIP(MV);
     MV->DISSASEMBLER=1;
     while(ipvalor<MV->CSsize && ipvalor>=0) {
-        valor=MV->MEMORIA[ipvalor];          
+        valor=MV->MEMORIA[ipvalor];
         MV->REGS[OP2].dato=MV->REGS[OP1].dato=0;
 
 //      printf("\n\nSIGUIENTE INSTRUCCION:%5x \n",valor);
@@ -71,7 +80,7 @@ void ejecucion(tMV *MV){
         top2=(valor>>6) &0X3;
         top1=(valor >> 4) & 0x3;
 
-        MV->REGS[OPC].dato = opcod; 
+        MV->REGS[OPC].dato = opcod;
 
             for (i=0; i < top2; i++) {
                 (MV->REGS[OP2].dato)=(MV->REGS[OP2].dato<<8);
@@ -92,7 +101,7 @@ void ejecucion(tMV *MV){
 
         int aux= MV->REGS[OPC].dato;
         MV->REGS[IP].dato++;
-        
+
         if ( (aux >= 0 && aux<=8) || (aux>=15 && aux <= 31) ){
             if (MV->DISSASEMBLER) {
                 printf("\n[%04X] %4s",ipvalor,( MV->FUNCIONES[aux]).nombre);
@@ -111,13 +120,13 @@ void ejecucion(tMV *MV){
                 printf("\nDS %08x", MV->REGS[DS].dato);
                 printf("\nEDX %08x", MV->REGS[EDX].dato);
                 printf("\nECX %08x", MV->REGS[ECX].dato);*/
-                
+
         }
         else
             invalidfunction();
 
 
-        ipvalor = getIP(MV); 
+        ipvalor = getIP(MV);
     }
 
 

@@ -245,7 +245,7 @@ void not_(tMV *MV)
     setCC(MV, get(MV, MV->REGS[OP2].dato));
 }
 
-void pop(tMV *MV, int OP1) {
+void pop(tMV *MV) {
     int sp_val = MV->REGS[SP].dato & 0xFFFF;    // offset dentro del stack segment (en palabras)
     int ss_index = MV->REGS[SS].dato >> 16;     // índice del segmento de pila
     int ss_base  = (MV->SEGMENTTABLE[ss_index] >> 16) & 0xFFFF;
@@ -260,7 +260,7 @@ void pop(tMV *MV, int OP1) {
     int valor = MV->MEMORIA[ss_base + sp_val];
 
     // Obtengo el valor y se lo doy a EAX
-    MV->REGS[EAX].dato= get(MV, OP1);
+    MV->REGS[EAX].dato= get(MV, MV->regs[OP2].dato);
 
     // Incrementar SP en 1 palabra (4 bytes)
     sp_val += 1;
@@ -292,7 +292,7 @@ void pop(tMV *MV, int OP1) {
 
 } */
 
-void push(tMV *MV, int OP) {
+void push(tMV *MV) {
     int valor;
 
     // Obtener info del stack segment
@@ -313,7 +313,7 @@ void push(tMV *MV, int OP) {
     }
 
     // Obtener valor del operando
-    valor = get(MV, OP);
+    valor = get(MV, MV->regs[OP2].dato);
 
     // Extender signo a 32 bits si es 16 bits con signo
     if (valor & 0x8000)
@@ -326,7 +326,7 @@ void push(tMV *MV, int OP) {
     MV->MEMORIA[addr + 2] = (valor >> 8) & 0xFF;
     MV->MEMORIA[addr + 3] = valor & 0xFF; */
 
-    set(MV, OP, valor);
+    set(MV, MV->regs[OP2].dato, valor);
 
     // Actualizar SP
     MV->REGS[SP].dato = (segIndex << 16) | offsetSP;
