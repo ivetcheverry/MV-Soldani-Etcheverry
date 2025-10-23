@@ -281,7 +281,34 @@ void setParamSegment(tMV *MV, int argsc, char *args[])
     addsegmento(MV,0,i,0);
 }
 
-void init_MV(tMV *MV, int *OK, int CONTROL[], int argsc, char *args[])
+void cargaimagen(tMV *MV, FILE *arch) {
+    int aux=0,mem=0,i,j;
+    int regsaux[32], tablaaux[8], *mem;
+
+
+    fread(&aux,1,1,arch); mem = aux;
+    fread(&aux,1,1,arch); mem += aux;
+
+    MV->MEM=mem;
+
+    int i=0;
+    fread(regsaux,4,32,arch);
+    
+    for (i=0;i<32;i++)
+    MV->REGS[i].dato = regsaux[i];
+
+    fread(tablaaux,4,8,arch);
+    for (i=0;i<8;i++)
+        MV->SEGMENTTABLE[i] = tablaaux[i];
+    
+    j=32+8+2;
+    while (fread(&aux,1,1,arch)!=NULL) {
+        MV->MEMORIA[j] = aux;
+        j++;
+    }
+}
+
+void init_MV(tMV *MV, int *OK, int CONTROLVMX[],int CONTROLVMI[], int argsc, char *args[])
 {
 
     FILE *arch;
@@ -303,7 +330,7 @@ void init_MV(tMV *MV, int *OK, int CONTROL[], int argsc, char *args[])
         if (strcmp(tipoParametro, ".vmi") == 0)
             strcpy(MV->NOMBREIMAGEN, a);
 
-        else if (strncmp(a, "m=", 2) == 0)
+        else if (strncmp(a, "m=", 2) == 0) 
         {
             MV->MEM = atoi(a + 2);
         }
@@ -319,21 +346,22 @@ void init_MV(tMV *MV, int *OK, int CONTROL[], int argsc, char *args[])
             break;             // Es el ultimo flag, no recorro mas
         }
     }
+
     arch = fopen(args[1], "rb");
     tipoParametro = strrchr(args[1], '.');
     //tipoParametro = ".vmx";
 
     if (arch)
     {
-        if (tipoParametro == ".vmx" || 1==1)
+        if (tipoParametro == ".vmx")
         { // archivo que le pasamos tiene extension .vmx
             i=0;
-            printf("\n");
+            //printf("\n");
             fread(&aux, 1, 1, arch); // CONTROLO LOS CARACTERES "VMX25"
             
-            while (i < 5 && aux - CONTROL[i] == 0)
+            while (i < 5 && aux - CONTROLVMX[i] == 0)
             {
-                printf("%3c",aux);
+                //printf("%3c",aux);
                 i++;
                 fread(&aux, 1, 1, arch);
             }
@@ -343,7 +371,7 @@ void init_MV(tMV *MV, int *OK, int CONTROL[], int argsc, char *args[])
             }
             else
             { // CONTROLO VERSIONES
-                 printf("\n VERSION: %d \n\n", aux);
+                 //printf("\n VERSION: %d \n\n", aux);
                 if (aux != 1 && aux != 2)
                     printf("\n VERSION NO SOPORTADA!");
                 else
@@ -359,8 +387,36 @@ void init_MV(tMV *MV, int *OK, int CONTROL[], int argsc, char *args[])
         }
         else if (tipoParametro == ".vmi")
         {
-            // carga a partir de una imagen.
+            i=0;
+            //printf("\n");
+            fread(&aux, 1, 1, arch); // CONTROLO LOS CARACTERES "VMI25"
+            
+            while (i < 5 && aux - CONTROLVMI[i] == 0)
+            {
+                //printf("%3c",aux);
+                i++;
+                fread(&aux, 1, 1, arch);
+            }
+            if (i < 5)
+            {
+                printf("\n ERROR, ARCHIVO NO VALIDO!");
+            }
+            else
+            { // CONTROLO VERSION DE IMAGEN
+                 //printf("\n VERSION: %d \n\n", aux);
+                if (aux != 1)
+                    printf("\n VERSION NO SOPORTADA!");
+                else
+                { // VALIDO
+                    MV->VERSION = aux;
+                    cargaImagen(MV,arch);
+                }
+            }
+           
         }
+
+
+
 
         fclose(arch);
     }

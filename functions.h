@@ -5,14 +5,17 @@
 
 
 void mostrar(tMV *MV, int OP, int j);
-void init_MV(tMV *MV, int *OK, int CONTROL[], int argsc, char *args[]);
+void init_MV(tMV *MV, int *OK, int CONTROLVMX[],int CONTROLVMI[], int argsc, char *args[]);
 
 void addsegmento(tMV *MV, int inicio, int tamano, int pos);
 int buscarsegmento(tMV *MV, int puntero);
 
+void cargaImagen(MV,arch);
+
 void setParamSegment(tMV *MV, int argsc, char *args[]);
 void setSegmentTable(tMV *MV, FILE *arch);
 void setCodeSegment(FILE *arch,tMV *MV);
+
 
 int getdireccionfisica(tMV *MV, int Puntero);
 

@@ -8,10 +8,11 @@
 int main(int argsc, char *args[])
 {
     tMV MV;
-    int CONTROL[] = { 'V','M','X','2','5' };
+    int CONTROLVMX[] = { 'V','M','X','2','5' };
+    int CONTROLVMI[] = { 'V','M','I','2','5' };
     int OK=0;
     if (argsc>1) {
-        init_MV(&MV, &OK, CONTROL, argsc, args);
+        init_MV(&MV, &OK, CONTROLVMX, CONTROLVMI, argsc, args);
         if (OK) {    //VALIDADO
             init_regs(&MV);
             init_funciones(&MV);
