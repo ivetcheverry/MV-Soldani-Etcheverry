@@ -152,6 +152,11 @@ void ejecucion(tMV *MV){
         else
             invalidfunction();
 
+        if (MV->UNPASO){
+            MV->UNPASO=0;
+            break;
+        }
+
         ipvalor = getdireccionfisica(MV,MV->REGS[IP].dato);
     }
 

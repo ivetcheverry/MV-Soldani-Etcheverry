@@ -30,6 +30,7 @@ typedef struct tMV {
     int DISSASEMBLER;
     char *NOMBREIMAGEN;
     int ENTRYPOINT;
+    int UNPASO;
 
     int SEGMENTTABLE[TABLA_N];
     int MEMORIA[RAMDEFAULT];

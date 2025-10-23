@@ -70,10 +70,11 @@ void ret (tMV *MV){
 // 1 OPERANDO ---------------------------------------------------------------
 void sys(tMV *MV)
 {
-    int funcion, valor, aux, i;
+    int funcion, valor, aux, i,opanterior;
     char binario[33], imprimir[8];
     int B, H, O, D, C;
     char entrada;
+
 
     valor = 0;
 
@@ -257,12 +258,27 @@ void sys(tMV *MV)
         }
         case 0xF:
         {
-            // GenerarImagen();
             entrada = getchar();
-            if (entrada == '\n')
-                ejecucion(MV);
-            else if (entrada == 'q')
-                MV->FUNCIONES[STOP].func(MV);
+            do {
+                if (entrada == 'g')
+                    generarimagen(MV);
+                else if (entrada == '\n') {
+                    opanterior = MV->REGS[OP2].dato;
+                    generarimagen(MV);
+                    MV->UNPASO=1;
+                    ejecucion(MV);
+                    MV->REGS[OP2].dato = opanterior;
+                    MV->FUNCIONES[SYS].func(MV);
+                }
+                else if (entrada == 'q'){
+                    generarimagen(MV);
+                    MV->FUNCIONES[STOP].func(MV);
+                }
+                else
+                    printf("CARACTER INVALIDO");
+
+            } while (entrada != 'g' && entrada != 'q' && entrada != '\n');
+
             break;
         }
     }
