@@ -7,6 +7,7 @@
 int get(tMV *MV, int OP) {
     int tipo,valor=0,mask, byte_index, i;
     int regcod, offset;
+    int opreg;
     int inicio,cantbytes;
 
     tipo = OP>>24;
@@ -19,7 +20,7 @@ int get(tMV *MV, int OP) {
         regcod= OP & 0x1F;
         valor = MV->REGS[regcod].dato;
 
-        opreg=(OP & 0b11000000)>>6;
+        opreg = (OP & 0b11000000)>>6;
 
         switch (opreg) {
             case 0b11:
@@ -85,6 +86,7 @@ int getIP (tMV *MV) {
 void set(tMV *MV, int OP, int valorNuevo) {
     int i, tipo, valor;
     int regcod, offset;
+    int opreg;
     int inicio,cantbytes;
 
     tipo = OP >>24;

@@ -105,15 +105,25 @@ void init_regs(tMV *MV)
     // Segmentos
     strcpy(MV->REGS[CS].nombre, "CS");
     strcpy(MV->REGS[DS].nombre, "DS");
+    strcpy(MV->REGS[ES].nombre, "ES");
+    strcpy(MV->REGS[SS].nombre, "SS");
+    strcpy(MV->REGS[KS].nombre, "KS");
+    strcpy(MV->REGS[PS].nombre, "PS");
+
 }
 
 
 void setCodeSegment(FILE *arch, tMV *MV)
 {
     // vuelca el codigo al code segment
-    int i, aux, posCS;
-    posCS = buscarCS();
-    for (i = 0; i < posCS; i++)
+    int i, aux, liminf,limsup,base;
+
+    base = (MV->REGS[CS].dato & 0xFFFF0000)>>16;
+    liminf = (MV->SEGMENTTABLE[base]&0xFFFF0000) >> 16;
+    limsup = (MV->SEGMENTTABLE[base]&0xFFFF0000) >> 16;
+    limsup += MV->SEGMENTTABLE[base]&0xFFFF;
+
+    for (i = liminf; i < limsup; i++)
     {
         fread(&aux, 1, 1, arch);
         /*
@@ -130,16 +140,16 @@ void addsegmento(tMV *MV, int inicio, int tamano, int pos) {
     Recibe todos los parametros, lo unico que hace es insertar los segmentos en la tabla.
     */
 
-    MV->SEGMENTTABLE[pos] = ( inicio<<16 || tamano);
-
+    MV->SEGMENTTABLE[pos] = (inicio<<16)&0xFFFF0000;
+    MV->SEGMENTTABLE[pos] += tamano;
 }
 
 int getdireccionfisica(tMV *MV, int Puntero) {
-    int basePuntero = (Puntero>>16 && 0xFFFF);
-    int offsetPuntero = (Puntero&&0xFFFF);
+    int basePuntero = (Puntero>>16 & 0xFFFF);
+    int offsetPuntero = (Puntero&0xFFFF);
     int pos;
 
-    pos = MV->SEGMENTTABLE[basePuntero]>>16 && 0xFFFF; // Obtengo el inicio
+    pos = (MV->SEGMENTTABLE[basePuntero]>>16) & 0xFFFF; // Obtengo el inicio
     pos += offsetPuntero;
 
     return pos;
@@ -160,8 +170,8 @@ void setSegmentTable(tMV *MV, FILE *arch)
     int pos;
     int indice;
 
-    int ordenlectura[5] = {CS, DS, ES, SS, KS};
-    int ordensegmentos[5] = {KS, CS, DS, ES, SS};
+    int ordenlectura[5];
+    int ordensegmentos[5];
 
     if (MV->PARAM == -1)
         pos = 0;
@@ -170,19 +180,25 @@ void setSegmentTable(tMV *MV, FILE *arch)
 
     if (MV->VERSION == 1)
     {
+        aux=0;
         fread(&aux, 1, 1, arch);
+        printf("%x",aux);
         tamano = aux;
         fread(&aux, 1, 1, arch);
+        printf("%x",aux);
         tamano += aux;
 
         addsegmento(MV, inicio, tamano, pos);
-        inicio += tamano;
-        pos++;
+        MV->REGS[IP].dato = MV->REGS[CS].dato = pos<<16;
+        inicio += tamano;  pos++;
         addsegmento(MV, inicio, MV->MEM - inicio, pos);
+        MV->REGS[DS].dato = pos<<16;
     }
 
     else
     {
+          ordenlectura[0] = CS;   ordenlectura[1] = DS;   ordenlectura[2] = ES;   ordenlectura[3] = SS;   ordenlectura[4] = KS;
+        ordensegmentos[0] = KS; ordensegmentos[1] = CS; ordensegmentos[2] = DS; ordensegmentos[3] = ES; ordensegmentos[4] = SS;
         // ESTOS FREAD LEERAN EL HEADER DEL VMX, Y EN CADA REGISTRO GUARDARÁ TEMPORALMENTE EL TAMAÑO DE CADA SEGMENTO
 
         for (int i = 0; i < 5; i++)
@@ -210,7 +226,7 @@ void setSegmentTable(tMV *MV, FILE *arch)
         }
 
         // Aprovecho el archivo que esta abierto para leer el entry point
-        fread(&aux,1,1,arch); 
+        fread(&aux,1,1,arch);
         offset = aux;
         fread(&aux,1,1,arch);
         offset+=aux;
@@ -218,53 +234,54 @@ void setSegmentTable(tMV *MV, FILE *arch)
         MV->REGS[IP].dato = MV->REGS[CS].dato+offset;
 
     }
+
+    for (int i=0;i<8;i++){
+        printf("\n%08x", MV->SEGMENTTABLE[i]);
+    }
 }
 
-void setParamSegment(tMV *MV, int argsc, char *args[], int *sizePS, int *PSpointer)
+void setParamSegment(tMV *MV, int argsc, char *args[])
 {
-    int j, w, pos, i = 0;
-    int aux = argsc;
-    int offsets[100];
-    while (i < argsc && args[i] != "-p")
-    {
-        i++;
-        aux--;
-    }
-    if (args[i] != "-p")
-    {
-        i++;
-        pos = 0;
-        for (w = 0; w < aux; w++)
-        {
-            offsets[w] = pos;
-            j = 0;
-            while (j != '\0')
-            {
-                MV->MEMORIA[pos] = args[i][j]; // accedo a la palabra i, y a la letra j
-                pos++;
-                j++;
-            }
-            MV->MEMORIA[pos] = '\0';
-            pos++;
+
+    /*
+     i: variable que lleva offset donde inicia cada palabra
+     j: variable que recorre cada letra de cada palabra
+     w: variable que recorre cada palabra
+    */
+
+    int j, w, i;
+    int offsets[20], inicio=0, tamano=0;
+    int puntero;
+
+    int cant_palabras = argsc - MV->PARAM; //MV->PARAM tiene el indice dentro del vector args[] donde comienza la primer palabra
+    i=0;
+
+    for (w = 0; w < cant_palabras; w++){
+        offsets[w] = i;
+        j = 0;
+        while (j != '\0'){
+            MV->MEMORIA[i] = args[i][j]; // guardo en memoria, la letra [j] de la palabra guardada en args[i]
+            i++; j++;
         }
-        (*PSpointer) = pos;
-        for (w = 0; w < aux; w++)
-        {
-            for (i = 0; i < 2; i++)
-            {
-                MV->MEMORIA[pos] = 0x00;
-                pos++;
-            }
-            MV->MEMORIA[pos] = (offsets[w] && 0x0000FF00) >> 8;
-            pos++;
-            MV->MEMORIA[pos] = (offsets[w] && 0xFF);
-            pos++;
-        }
+        MV->MEMORIA[i] = '\0';
+        i++;
     }
-    (*sizePS) = pos;
+
+    // Ya guardadas las palabras en memoria, puedo armar el puntero de PS al primer puntero dentro de memoria.
+    MV->REGS[PS].dato = i;
+
+    for (w=0; w<cant_palabras; w++) {
+        puntero = offsets[w];
+        MV->MEMORIA[i]= puntero&0xFF000000; i++;
+        MV->MEMORIA[i]= puntero&0xFF0000;   i++;
+        MV->MEMORIA[i]= puntero&0xFF00;     i++;
+        MV->MEMORIA[i]= puntero&0xFF;       i++;
+    }
+
+    addsegmento(MV,0,i,0);
 }
 
-void init_MV(tMV *MV, int *OK, int CONTROL[], int argsc, char *args[]) //,char ANOMBREARCHIVO[]) {
+void init_MV(tMV *MV, int *OK, int CONTROL[], int argsc, char *args[])
 {
 
     FILE *arch;
@@ -302,20 +319,21 @@ void init_MV(tMV *MV, int *OK, int CONTROL[], int argsc, char *args[]) //,char A
             break;             // Es el ultimo flag, no recorro mas
         }
     }
-
     arch = fopen(args[1], "rb");
     tipoParametro = strrchr(args[1], '.');
+    //tipoParametro = ".vmx";
 
     if (arch)
     {
-        if (tipoParametro == ".vmx")
+        if (tipoParametro == ".vmx" || 1==1)
         { // archivo que le pasamos tiene extension .vmx
-
+            i=0;
             printf("\n");
             fread(&aux, 1, 1, arch); // CONTROLO LOS CARACTERES "VMX25"
+            
             while (i < 5 && aux - CONTROL[i] == 0)
             {
-                // printf("%3c",aux);
+                printf("%3c",aux);
                 i++;
                 fread(&aux, 1, 1, arch);
             }
@@ -325,16 +343,16 @@ void init_MV(tMV *MV, int *OK, int CONTROL[], int argsc, char *args[]) //,char A
             }
             else
             { // CONTROLO VERSIONES
-                // printf("\n VERSION: %d \n\n", aux);
+                 printf("\n VERSION: %d \n\n", aux);
                 if (aux != 1 && aux != 2)
                     printf("\n VERSION NO SOPORTADA!");
                 else
                 { // VALIDO
                     MV->VERSION = aux;
                     (*OK) = 1;
-                    setParamSegment(MV, argsc, args, &sizePS, &PSpointer);
-                    setTabla(MV, arch, sizePS, PSpointer);
-
+                    if (MV->PARAM!=-1)
+                        setParamSegment(MV, argsc, args);
+                    setSegmentTable(MV,arch);
                     setCodeSegment(arch, MV);
                 }
             }

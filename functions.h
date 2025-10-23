@@ -5,15 +5,15 @@
 
 
 void mostrar(tMV *MV, int OP, int j);
-void init_MV(tMV *MV, int *OK, int CONTROL[], int argsc, char *args[]);//, char NOMBREARCHIVO[]);
+void init_MV(tMV *MV, int *OK, int CONTROL[], int argsc, char *args[]);
 
 void addsegmento(tMV *MV, int inicio, int tamano, int pos);
+int buscarsegmento(tMV *MV, int puntero);
 
-void setParamSegment(tMV *MV, int argsc, char *args[],int *,int *);
+void setParamSegment(tMV *MV, int argsc, char *args[]);
 void setSegmentTable(tMV *MV, FILE *arch);
 void setCodeSegment(FILE *arch,tMV *MV);
 
-int getdireccionfisica(tMV *MV, int Puntero);
 int getdireccionfisica(tMV *MV, int Puntero);
 
 void init_regs(tMV *MV);
@@ -22,13 +22,14 @@ void init_funciones(tMV *MV);
 void acceso_mem(tMV *MV, int OP);
 void ejecucion(tMV *MV);
 
-
 int get(tMV *MV, int OP);
-int getIP (tMV *MV);
 void set(tMV *MV, int OP, int valorNuevo);
 void setCC(tMV *MV, int ultvalor);
 void setsys(tMV *MV, int valorNuevo);
 int getsys(tMV *MV);
+
+void setsys_buffer(tMV *MV, char *, int);
+void getsys_buffer(tMV *MV, char *, int,int );
 
 // 0 OPERANDOS
 void stop(tMV *MV);
@@ -71,3 +72,5 @@ void rnd(tMV *MV);
 void segmentationfault();
 void invalidfunction();
 void divisionzero();
+void stack_overflow();
+void stack_underflow();

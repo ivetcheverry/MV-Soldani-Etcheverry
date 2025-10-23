@@ -269,6 +269,9 @@ void sys(tMV *MV)
 
 }
 
+void call_(tMV *MV) {
+}
+
 void jmp(tMV *MV)
 {
     MV->REGS[IP].dato = get(MV, MV->REGS[OP2].dato);

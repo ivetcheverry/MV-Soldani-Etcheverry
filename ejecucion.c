@@ -4,7 +4,7 @@
 #include "functions.h"
 
 
-int get_tipo_mem(OP){
+int get_tipo_mem(int OP){
     int valor=4;
 
     OP=(OP&0x00FF0000)>>22; //dos bits mas significativos del codigo de memoria
@@ -69,10 +69,22 @@ void acceso_mem (tMV *MV, int OP){
 void ejecucion(tMV *MV){
 
     int top1, top2, opcod, i,j, ipvalor, valor;
-    ipvalor = getIP(MV);
+
+    int limsup,liminf;
+    int base;
+    
+    base = (MV->REGS[IP].dato & 0xFFFF0000)>>16;
+
+    liminf = (MV->SEGMENTTABLE[base]&0xFFFF0000) >> 16;
+
+    limsup = (MV->SEGMENTTABLE[base]&0xFFFF0000) >> 16;
+    limsup += MV->SEGMENTTABLE[base]&0xFFFF;
+    
+
+    ipvalor = getdireccionfisica(MV,MV->REGS[IP].dato);
     MV->DISSASEMBLER=1;
 
-    while(ipvalor<MV->CSsize && ipvalor>=0) {
+    while(ipvalor<limsup && ipvalor>=liminf) {
         valor=MV->MEMORIA[ipvalor];
         MV->REGS[OP2].dato=MV->REGS[OP1].dato=0;
 
@@ -86,7 +98,7 @@ void ejecucion(tMV *MV){
             for (i=0; i < top2; i++) {
                 (MV->REGS[OP2].dato)=(MV->REGS[OP2].dato<<8);
                 MV->REGS[IP].dato+=1;
-                valor=MV->MEMORIA[MV->REGS[IP].dato];
+                valor=MV->MEMORIA[getdireccionfisica(MV,MV->REGS[IP].dato)];
                 MV->REGS[OP2].dato|=valor;
             }
             MV->REGS[OP2].dato |= (top2<<24);
@@ -95,7 +107,7 @@ void ejecucion(tMV *MV){
 
                 (MV->REGS[OP1].dato)=(MV->REGS[OP1].dato<<8);
                 MV->REGS[IP].dato+=1;
-                valor=MV->MEMORIA[MV->REGS[IP].dato];
+                valor=MV->MEMORIA[getdireccionfisica(MV,MV->REGS[IP].dato)];
                 MV->REGS[OP1].dato|=valor;
             }
             MV->REGS[OP1].dato |= (top1<<24);
@@ -126,8 +138,7 @@ void ejecucion(tMV *MV){
         else
             invalidfunction();
 
-
-        ipvalor = getIP(MV);
+        ipvalor = getdireccionfisica(MV,MV->REGS[IP].dato);
     }
 
 
