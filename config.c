@@ -73,9 +73,6 @@ void init_funciones(tMV *MV)
 
 void init_regs(tMV *MV)
 {
-    int i;
-    for (i = 0; i < 32; i++)
-        MV->REGS[i].dato = 0;
 
     strcpy(MV->REGS[LAR].nombre, "LAR");
     strcpy(MV->REGS[MAR].nombre, "MAR");
@@ -126,11 +123,11 @@ void setCodeSegment(FILE *arch, tMV *MV)
     for (i = liminf; i < limsup; i++)
     {
         fread(&aux, 1, 1, arch);
-        /*
-        printf("%3x",aux);
+        
+        /*printf("%3x",aux);
         if (i>0 && i%15 == 0)       //escribe lo que lee del .vmx
-            printf("\n");
-        */
+            printf("\n");*/
+        
         MV->MEMORIA[i] = aux;
     }
 }
@@ -142,7 +139,7 @@ void addsegmento(tMV *MV, int inicio, int tamano, int pos) {
     */
     int posicion_memoria;
     posicion_memoria = inicio + tamano;
-    if (posicion_memoria < MV->MEM){
+    if (posicion_memoria <= MV->MEM){
     MV->SEGMENTTABLE[pos] = (inicio<<16)&0xFFFF0000;
     MV->SEGMENTTABLE[pos] += tamano;
     }
@@ -189,10 +186,10 @@ void setSegmentTable(tMV *MV, FILE *arch)
     {
         aux=0;
         fread(&aux, 1, 1, arch);
-        printf("%x",aux);
+        //printf("%x",aux);
         tamano = aux;
         fread(&aux, 1, 1, arch);
-        printf("%x",aux);
+        //printf("%x",aux);
         tamano += aux;
 
         addsegmento(MV, inicio, tamano, pos);
@@ -240,10 +237,6 @@ void setSegmentTable(tMV *MV, FILE *arch)
 
         MV->REGS[IP].dato = MV->REGS[CS].dato+offset;
         MV->ENTRYPOINT = getdireccionfisica(MV,MV->REGS[IP].dato);
-    }
-
-    for (int i=0;i<8;i++){
-        printf("\n%08x", MV->SEGMENTTABLE[i]);
     }
 }
 
@@ -383,10 +376,10 @@ void init_MV(tMV *MV, int *OK, int CONTROLVMX[],int CONTROLVMI[], int argsc, cha
             break;             // Es el ultimo flag, no recorro mas
         }
     }
-
-    arch = fopen(args[1], "rb");
-    tipoParametro = strrchr(args[1], '.');
-    //tipoParametro = ".vmx";
+   // arch = fopen(args[1], "rb");
+    arch = fopen(NOMBREARCHIVO, "rb");
+   // tipoParametro = strrchr(args[1], '.');
+    tipoParametro = ".vmx";
 
     if (arch)
     {

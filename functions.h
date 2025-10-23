@@ -10,7 +10,9 @@ void init_MV(tMV *MV, int *OK, int CONTROLVMX[],int CONTROLVMI[], int argsc, cha
 void addsegmento(tMV *MV, int inicio, int tamano, int pos);
 int buscarsegmento(tMV *MV, int puntero);
 
+void generarimagen(tMV *);
 void cargarimagen(tMV *MV, FILE *arch);
+void subrutinaprincipal(tMV *);
 
 void setParamSegment(tMV *MV, int argsc, char *args[]);
 void setSegmentTable(tMV *MV, FILE *arch);

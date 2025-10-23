@@ -46,7 +46,7 @@ void acceso_mem (tMV *MV, int OP){
 
     MV->REGS[MAR].dato = MV->REGS[MAR].dato << 16;
 
-    MV->REGS[MAR].dato |= ( ( (MV->SEGMENTTABLE[( MV->REGS[LAR].dato>>16) & 0xFFFF])>>16 ) &0xFFFF) + (MV->REGS[LAR].dato & 0XFFFF );
+    MV->REGS[MAR].dato |= getdireccionfisica(MV,MV->REGS[LAR].dato);
 
     cantbytes = ((MV->REGS[MAR].dato & 0xFFFF0000)>>16);
     inicio = ((MV->REGS[MAR].dato & 0xFFFF));
@@ -65,7 +65,7 @@ void acceso_mem (tMV *MV, int OP){
 
 }
 
-void subrutinaprincipal(tMV *MV,int argsc) {
+void subrutinaprincipal(tMV *MV) {
     int ip_anterior = MV->REGS[IP].dato;
 
     MV->REGS[OP2].dato = MV->REGS[PS].dato;
@@ -94,9 +94,8 @@ void ejecucion(tMV *MV){
     limsup = (MV->SEGMENTTABLE[base]&0xFFFF0000) >> 16;
     limsup += MV->SEGMENTTABLE[base]&0xFFFF;
 
-
+    MV->REGS[IP].dato = MV->ENTRYPOINT;
     ipvalor = getdireccionfisica(MV,MV->REGS[IP].dato);
-    MV->DISSASEMBLER=1;
 
     while(ipvalor<limsup && ipvalor>=liminf) {
         valor=MV->MEMORIA[ipvalor];
@@ -121,7 +120,8 @@ void ejecucion(tMV *MV){
 
                 (MV->REGS[OP1].dato)=(MV->REGS[OP1].dato<<8);
                 MV->REGS[IP].dato+=1;
-                valor=MV->MEMORIA[getdireccionfisica(MV,MV->REGS[IP].dato)];
+                int direc = getdireccionfisica(MV,MV->REGS[IP].dato);
+                valor=MV->MEMORIA[direc];
                 MV->REGS[OP1].dato|=valor;
             }
             MV->REGS[OP1].dato |= (top1<<24);
@@ -131,7 +131,10 @@ void ejecucion(tMV *MV){
 
         if ( (aux >= 0 && aux<=8) || (aux>=15 && aux <= 31) ){
             if (MV->DISSASEMBLER) {
-                printf("\n[%04X] %4s",ipvalor,( MV->FUNCIONES[aux]).nombre);
+                if (ipvalor == MV->ENTRYPOINT)
+                    printf(">");
+
+                printf("[%04X] %4s",ipvalor,( MV->FUNCIONES[aux]).nombre);
 
                 if (aux >= 1 && aux <=7)
                     j = 1;
@@ -140,14 +143,15 @@ void ejecucion(tMV *MV){
 
                 mostrar(MV,MV->REGS[OP1].dato,j);
                 mostrar(MV,MV->REGS[OP2].dato,j);
-            } else
-                MV->FUNCIONES[aux].func(MV);
-                /*printf("\nOP1: %0x", MV->REGS[OP1].dato);
+                printf("\n");
+            } else{
+                printf("\nOP1: %0x", MV->REGS[OP1].dato);
                 printf("\nOP2: %0x\n", MV->REGS[OP2].dato);
                 printf("\nDS %08x", MV->REGS[DS].dato);
-                printf("\nEDX %08x", MV->REGS[EDX].dato);
-                printf("\nECX %08x", MV->REGS[ECX].dato);*/
+                MV->FUNCIONES[aux].func(MV);
 
+                
+            }
         }
         else
             invalidfunction();
