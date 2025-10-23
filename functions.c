@@ -87,77 +87,91 @@ void sys(tMV *MV)
     B = MV->REGS[EAX].dato & 0b10000;
 
     int cantidadceldas = (MV->REGS[ECX].dato & 0XFFFF);
-    for (i = 0; i < cantidadceldas; i++)
-    {
-        printf("\n");
-        switch (funcion)
-        {
+
+    switch (funcion){
+
         case 1:
         {
-            printf("[%04X]  ", MV->REGS[MAR].dato & 0XFFFF);
-            if (D)
-                scanf("%d", &valor);
-            if (C)
-                scanf("%c", &valor);
-            if (O)
-                scanf("%o", &valor);
-            if (H)
-                scanf("%x", &valor);
-            if (B)
-            {
-                scanf("%s", binario);
-                for (i = strlen(binario) - 1; i >= 0; i--)
+            for (i = 0; i < cantidadceldas; i++){
+                printf("\n");
+
+                printf("[%04X]  ", MV->REGS[MAR].dato & 0XFFFF);
+                if (D)
+                    scanf("%d", &valor);
+                if (C)
+                    scanf("%c", &valor);
+                if (O)
+                    scanf("%o", &valor);
+                if (H)
+                    scanf("%x", &valor);
+                if (B)
                 {
-                    valor = valor << 1;
-                    valor |= binario[i] - '0';
+                    scanf("%s", binario);
+                    for (i = strlen(binario) - 1; i >= 0; i--)
+                    {
+                        valor = valor << 1;
+                        valor |= binario[i] - '0';
+                    }
                 }
+
+                setsys(MV, valor);
             }
 
-            setsys(MV, valor);
+            MV->REGS[MAR].dato += ((MV->REGS[ECX].dato >> 16) & 0xffff);
+
             break;
         }
         case 2:
         {
-            valor = getsys(MV);
-            printf("[%04X]  ", MV->REGS[MAR].dato & 0XFFFF);
-            if (D)
-                printf("%d\t", valor);
-            int tmp_val = valor; // guardo el valor original
-            if (C)
-            {
+            for (i = 0; i < cantidadceldas; i++){
+                printf("\n");
 
-                for (i = 0; i < ((MV->REGS[ECX].dato & 0xFFFF0000) >> 16); i++)
+                valor = getsys(MV);
+                printf("[%04X]  ", MV->REGS[MAR].dato & 0XFFFF);
+                if (D)
+                    printf("%d\t", valor);
+                int tmp_val = valor; // guardo el valor original
+                if (C)
                 {
-                    imprimir[i] = (char)tmp_val & 0xff;
-                    tmp_val = tmp_val >> 8;
+
+                    for (i = 0; i < ((MV->REGS[ECX].dato & 0xFFFF0000) >> 16); i++)
+                    {
+                        imprimir[i] = (char)tmp_val & 0xff;
+                        tmp_val = tmp_val >> 8;
+                    }
+                    for (i = ((MV->REGS[ECX].dato & 0xFFFF0000) >> 16) - 1; i >= 0; i--)
+                        if (imprimir[i] >= 0 && imprimir[i] < 128)
+                            printf("%c", (char)imprimir[i]);
+                        else
+                            printf(".");
+                    printf(" \t");
                 }
-                for (i = ((MV->REGS[ECX].dato & 0xFFFF0000) >> 16) - 1; i >= 0; i--)
-                    if (imprimir[i] >= 0 && imprimir[i] < 128)
-                        printf("%c", (char)imprimir[i]);
-                    else
-                        printf(".");
-                printf(" \t");
+
+                if (O)
+                    printf("0o%o \t", (unsigned int)valor);
+                if (H)
+                    printf("0x%08x \t", (unsigned int)valor);
+
+                if (B)
+                {
+                    unsigned int tmp = (unsigned int)valor;
+                    for (i = 31; i >= 0; i--)
+                    {
+                        binario[31 - i] = (tmp & (1U << i)) ? '1' : '0';
+                    }
+                    binario[32] = '\0';
+                    printf("0b%s\t", binario);
+                }
             }
 
-            if (O)
-                printf("0o%o \t", (unsigned int)valor);
-            if (H)
-                printf("0x%08x \t", (unsigned int)valor);
 
-            if (B)
-            {
-                unsigned int tmp = (unsigned int)valor;
-                for (i = 31; i >= 0; i--)
-                {
-                    binario[31 - i] = (tmp & (1U << i)) ? '1' : '0';
-                }
-                binario[32] = '\0';
-                printf("0b%s\t", binario);
-            }
+            MV->REGS[MAR].dato += ((MV->REGS[ECX].dato >> 16) & 0xffff);
+
             break;
         }
         case 3:     //string read
         {
+            printf("\n");
             printf("[%04X]  ", MV->REGS[MAR].dato & 0XFFFF);
 
             char buffer[512]; // limite razonable
@@ -223,6 +237,7 @@ void sys(tMV *MV)
             getsys_buffer(MV, buffer, base_fisica, seg_tam - offset);
 
             // Imprimir
+            printf("\n");
             printf("%s", buffer);
 
             // Actualizar MBR con último carácter leído
@@ -235,7 +250,9 @@ void sys(tMV *MV)
         }
         case 7:
         {
-            system("cls");
+            printf("\n");
+            printf("\033[2J\033[H");  // Limpia pantalla y mueve el cursor al inicio
+            fflush(stdout);
             break;
         }
         case 0xF:
@@ -248,9 +265,8 @@ void sys(tMV *MV)
                 MV->FUNCIONES[STOP].func(MV);
             break;
         }
-        }
-        MV->REGS[MAR].dato += ((MV->REGS[ECX].dato >> 16) & 0xffff);
     }
+
 }
 
 void jmp(tMV *MV)
