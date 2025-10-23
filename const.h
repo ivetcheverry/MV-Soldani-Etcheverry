@@ -22,18 +22,20 @@ typedef struct treg{
 
 typedef struct tMV {
     int VERSION;
-    
+
     //parametros o flags obtenidos como parametros
     int MEM;
     int PARAM;
+    int ARGC;
     int DISSASEMBLER;
     char *NOMBREIMAGEN;
+    int ENTRYPOINT;
 
     int SEGMENTTABLE[TABLA_N];
     int MEMORIA[RAMDEFAULT];
     tfunc FUNCIONES[32];
     treg REGS[32];
-    
+
 }tMV;
 
 

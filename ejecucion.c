@@ -65,6 +65,20 @@ void acceso_mem (tMV *MV, int OP){
 
 }
 
+void subrutinaprincipal(tMV *MV,int argsc) {
+    int ip_anterior = MV->REGS[IP].dato;
+
+    MV->REGS[OP2].dato = MV->REGS[PS].dato;
+    push (MV);
+    MV->REGS[OP2].dato = MV->ARGC;
+    push (MV);
+    MV->REGS[OP2].dato = -1;
+    push(MV);
+
+    MV->REGS[IP].dato = ip_anterior;
+}
+
+
 
 void ejecucion(tMV *MV){
 
@@ -72,14 +86,14 @@ void ejecucion(tMV *MV){
 
     int limsup,liminf;
     int base;
-    
+
     base = (MV->REGS[IP].dato & 0xFFFF0000)>>16;
 
     liminf = (MV->SEGMENTTABLE[base]&0xFFFF0000) >> 16;
 
     limsup = (MV->SEGMENTTABLE[base]&0xFFFF0000) >> 16;
     limsup += MV->SEGMENTTABLE[base]&0xFFFF;
-    
+
 
     ipvalor = getdireccionfisica(MV,MV->REGS[IP].dato);
     MV->DISSASEMBLER=1;

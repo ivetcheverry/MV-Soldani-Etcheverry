@@ -627,6 +627,11 @@ void divisionzero()
     exit(1);
 }
 
+void memoria_insuficiente(){
+    printf("\nERROR! MEMORIA INSUFICIENTE!");
+    exit(1);
+}
+
 void stack_overflow()
 {
     printf("\nERROR! STACK OVERFLOW!");

@@ -138,10 +138,17 @@ void setCodeSegment(FILE *arch, tMV *MV)
 void addsegmento(tMV *MV, int inicio, int tamano, int pos) {
     /*
     Recibe todos los parametros, lo unico que hace es insertar los segmentos en la tabla.
+    Verifica si se puede ingresar el segmento o la memoria es insuficiente.
     */
-
+    int posicion_memoria;
+    posicion_memoria = inicio + tamano;
+    if (posicion_memoria < MV->MEM){
     MV->SEGMENTTABLE[pos] = (inicio<<16)&0xFFFF0000;
     MV->SEGMENTTABLE[pos] += tamano;
+    }
+    else
+        memoria_insuficiente();
+
 }
 
 int getdireccionfisica(tMV *MV, int Puntero) {
@@ -232,7 +239,7 @@ void setSegmentTable(tMV *MV, FILE *arch)
         offset+=aux;
 
         MV->REGS[IP].dato = MV->REGS[CS].dato+offset;
-
+        MV->ENTRYPOINT = getdireccionfisica(MV,MV->REGS[IP].dato);
     }
 
     for (int i=0;i<8;i++){
@@ -255,6 +262,8 @@ void setParamSegment(tMV *MV, int argsc, char *args[])
 
     int cant_palabras = argsc - MV->PARAM; //MV->PARAM tiene el indice dentro del vector args[] donde comienza la primer palabra
     i=0;
+
+    MV->ARGC= cant_palabras;
 
     for (w = 0; w < cant_palabras; w++){
         offsets[w] = i;
@@ -281,9 +290,35 @@ void setParamSegment(tMV *MV, int argsc, char *args[])
     addsegmento(MV,0,i,0);
 }
 
-void cargaimagen(tMV *MV, FILE *arch) {
-    int aux=0,mem=0,i,j;
-    int regsaux[32], tablaaux[8], *mem;
+void generarimagen(tMV *MV) {
+
+    int i;
+    FILE *arch = fopen(MV->NOMBREIMAGEN,"wb");
+    int HEADER[6] = {'V','M','I','2','5','1'};
+
+    if (arch) {
+        //CARGA HEADER
+        for (i=0;i<6;i++)
+            fwrite(&HEADER[i],1,1,arch);
+
+        //CARGA TABLA DE SEGMENTOS
+        for (i=0;i<8;i++)
+            fwrite(&MV->SEGMENTTABLE[i],1,1,arch);
+
+        for (i=0; i<MV->MEM; i++) {
+            fwrite(&MV->MEMORIA[i],1,1,arch);
+        }
+
+    fclose(arch);
+
+    } else
+        printf("NO SE PUDO ABRIR/GENERAR EL ARCHIVO");
+}
+
+
+void cargarimagen(tMV *MV, FILE *arch) {
+    int aux=0,mem=0,i;
+    int regsaux[32], tablaaux[8];
 
 
     fread(&aux,1,1,arch); mem = aux;
@@ -291,20 +326,22 @@ void cargaimagen(tMV *MV, FILE *arch) {
 
     MV->MEM=mem;
 
-    int i=0;
+    i=0;
     fread(regsaux,4,32,arch);
-    
+
     for (i=0;i<32;i++)
     MV->REGS[i].dato = regsaux[i];
+
+    MV->ENTRYPOINT = getdireccionfisica(MV, MV->REGS[IP].dato);
 
     fread(tablaaux,4,8,arch);
     for (i=0;i<8;i++)
         MV->SEGMENTTABLE[i] = tablaaux[i];
-    
-    j=32+8+2;
-    while (fread(&aux,1,1,arch)!=NULL) {
-        MV->MEMORIA[j] = aux;
-        j++;
+
+    i=0;
+    while (fread(&aux,1,1,arch)) {
+        MV->MEMORIA[i] = aux;
+        i++;
     }
 }
 
@@ -330,7 +367,7 @@ void init_MV(tMV *MV, int *OK, int CONTROLVMX[],int CONTROLVMI[], int argsc, cha
         if (strcmp(tipoParametro, ".vmi") == 0)
             strcpy(MV->NOMBREIMAGEN, a);
 
-        else if (strncmp(a, "m=", 2) == 0) 
+        else if (strncmp(a, "m=", 2) == 0)
         {
             MV->MEM = atoi(a + 2);
         }
@@ -358,7 +395,7 @@ void init_MV(tMV *MV, int *OK, int CONTROLVMX[],int CONTROLVMI[], int argsc, cha
             i=0;
             //printf("\n");
             fread(&aux, 1, 1, arch); // CONTROLO LOS CARACTERES "VMX25"
-            
+
             while (i < 5 && aux - CONTROLVMX[i] == 0)
             {
                 //printf("%3c",aux);
@@ -390,7 +427,7 @@ void init_MV(tMV *MV, int *OK, int CONTROLVMX[],int CONTROLVMI[], int argsc, cha
             i=0;
             //printf("\n");
             fread(&aux, 1, 1, arch); // CONTROLO LOS CARACTERES "VMI25"
-            
+
             while (i < 5 && aux - CONTROLVMI[i] == 0)
             {
                 //printf("%3c",aux);
@@ -409,14 +446,11 @@ void init_MV(tMV *MV, int *OK, int CONTROLVMX[],int CONTROLVMI[], int argsc, cha
                 else
                 { // VALIDO
                     MV->VERSION = aux;
-                    cargaImagen(MV,arch);
+                    cargarimagen(MV,arch);
                 }
             }
-           
+
         }
-
-
-
 
         fclose(arch);
     }

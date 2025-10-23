@@ -10,7 +10,7 @@ void init_MV(tMV *MV, int *OK, int CONTROLVMX[],int CONTROLVMI[], int argsc, cha
 void addsegmento(tMV *MV, int inicio, int tamano, int pos);
 int buscarsegmento(tMV *MV, int puntero);
 
-void cargaImagen(MV,arch);
+void cargarimagen(tMV *MV, FILE *arch);
 
 void setParamSegment(tMV *MV, int argsc, char *args[]);
 void setSegmentTable(tMV *MV, FILE *arch);
@@ -75,5 +75,6 @@ void rnd(tMV *MV);
 void segmentationfault();
 void invalidfunction();
 void divisionzero();
+void memoria_insuficiente();
 void stack_overflow();
 void stack_underflow();
