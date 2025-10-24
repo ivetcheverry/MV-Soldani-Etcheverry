@@ -148,19 +148,6 @@ void addsegmento(tMV *MV, int inicio, int tamano, int pos) {
 
 }
 
-int getdireccionfisica(tMV *MV, int Puntero) {
-    int basePuntero = (Puntero>>16 & 0xFFFF);
-    int offsetPuntero = (Puntero&0xFFFF);
-    int pos;
-
-    pos = (MV->SEGMENTTABLE[basePuntero]>>16) & 0xFFFF; // Obtengo el inicio
-    pos += offsetPuntero;
-
-    return pos;
-}
-
-
-
 void setSegmentTable(tMV *MV, FILE *arch)
 {
     /*

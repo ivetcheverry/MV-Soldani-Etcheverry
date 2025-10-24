@@ -36,6 +36,10 @@ int getsys(tMV *MV);
 void setsys_buffer(tMV *MV, char *, int);
 void getsys_buffer(tMV *MV, char *, int,int );
 
+int get_tipo_mem(int OP);
+
+int analizarsigno(int valor, int cantbytes);
+
 // 0 OPERANDOS
 void stop(tMV *MV);
 void ret(tMV *MV);

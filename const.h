@@ -1,6 +1,6 @@
 #pragma once
 
-#define NOMBREARCHIVO "sample7.vmx"
+#define NOMBREARCHIVO "sample9.vmx"
 
 #define TABLA_N 8
 #define NMASK16 0x8000

@@ -3,83 +3,6 @@
 #include "const.h"
 #include "functions.h"
 
-
-int get_tipo_mem(int OP){
-    int valor=4;
-
-    OP=(OP&0x00FF0000)>>22; //dos bits mas significativos del codigo de memoria
-    valor-=OP;
-
-    return valor;
-}
-
-void acceso_mem (tMV *MV, int OP){
-    int offset=0,regcod,base, sys=0;
-    int cantbytes=0; int inicio=0;
-    int base_segmento, size_segmento;
-
-
-    if ( ( (OP & 0xFF000000) >>24 ) == 3) {
-        regcod = (OP & 0xFF0000) >> 16;
-        offset=  (OP & 0xFFFF);
-        if (offset & NMASK16)
-        offset = (offset ^ NMASK16) - NMASK16;
-    }
-    else {      //SYS
-        regcod = EDX;
-        sys=1;
-    }
-
-    base = ((MV->REGS[regcod].dato>>16 ) &0xFFFF);
-
-    if (base>=0 && base <= (MV->REGS[SS].dato >>16)) { //ya que siempre habra SS
-        MV->REGS[LAR].dato = base;
-        MV->REGS[LAR].dato = MV->REGS[LAR].dato<<16;
-        MV->REGS[LAR].dato |= ((offset + (MV->REGS[regcod].dato & 0XFFFF))&0xffff);
-    } else
-        segmentationfault();
-
-    if(sys)
-        MV->REGS[MAR].dato = (MV->REGS[ECX].dato & 0XFFFF0000) >> 16;
-    else
-        MV->REGS[MAR].dato = 0x0 | get_tipo_mem(MV->REGS[OP2].dato);    //obtengo cantidad de bytes a escribir/leer en memoria
-
-    MV->REGS[MAR].dato = MV->REGS[MAR].dato << 16;
-
-    MV->REGS[MAR].dato |= getdireccionfisica(MV,MV->REGS[LAR].dato);
-
-    cantbytes = ((MV->REGS[MAR].dato & 0xFFFF0000)>>16);
-    inicio = ((MV->REGS[MAR].dato & 0xFFFF));
-
-
-    if  (inicio+cantbytes > (MV->SEGMENTTABLE[base]&0xFFFF)  +  ((MV->SEGMENTTABLE[base]>>16)&0xFFFF) || (inicio < ((MV->SEGMENTTABLE[base]>>16)&0xFFFF)) )
-        segmentationfault();
-
-
-
-    /*
-    printf("\n");
-    printf("LAR %08x \n MAR %08x", MV->REGS[LAR].dato, MV->REGS[MAR].dato);
-    printf("\n");
-    */
-
-}
-
-void subrutinaprincipal(tMV *MV) {
-    int ip_anterior = MV->REGS[IP].dato;
-
-    MV->REGS[OP2].dato = MV->REGS[PS].dato;
-    push (MV);
-    MV->REGS[OP2].dato = MV->ARGC;
-    push (MV);
-    MV->REGS[OP2].dato = -1;
-    push(MV);
-
-    MV->REGS[IP].dato = ip_anterior;
-}
-
-
-
 void ejecucion(tMV *MV){
 
     int top1, top2, opcod, i,j, ipvalor, valor;
@@ -145,10 +68,11 @@ void ejecucion(tMV *MV){
                 mostrar(MV,MV->REGS[OP2].dato,j);
                 printf("\n");
             } else{
-                printf("\nOP1: %0x", MV->REGS[OP1].dato);
+                /*printf("\nOP1: %0x", MV->REGS[OP1].dato);
                 printf("\nOP2: %0x\n", MV->REGS[OP2].dato);
-                printf("\nDS %08x", MV->REGS[DS].dato);
-                MV->FUNCIONES[aux].func(MV);
+                printf("\nDS %08x", MV->REGS[DS].dato);*/
+
+                    MV->FUNCIONES[aux].func(MV);
 
                 
             }
