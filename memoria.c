@@ -48,6 +48,11 @@ void acceso_mem (tMV *MV, int OP){
     cantbytes = ((MV->REGS[MAR].dato & 0xFFFF0000)>>16);
     inicio = ((MV->REGS[MAR].dato & 0xFFFF));
 
+    /*
+    printf("\n");
+    printf("LAR %08x \n MAR %08x", MV->REGS[LAR].dato, MV->REGS[MAR].dato);
+    printf("\n");
+    */
 
     if (base != MV->REGS[SS].dato>>16){
 
@@ -59,11 +64,7 @@ void acceso_mem (tMV *MV, int OP){
     }
 
 
-    /*
-    printf("\n");
-    printf("LAR %08x \n MAR %08x", MV->REGS[LAR].dato, MV->REGS[MAR].dato);
-    printf("\n");
-    */
+    
 
 }
 
@@ -75,9 +76,8 @@ int getsys(tMV *MV) {
         cantbytes = ((MV->REGS[MAR].dato & 0xFFFF0000)>>16);
         inicio= ((MV->REGS[MAR].dato & 0xFFFF));
 
-            for(i = inicio ; cantbytes > 0; cantbytes--){
-                valor = valor<<8;
-                valor |= MV->MEMORIA[i];
+            for(i = inicio+1 ; cantbytes > 0; cantbytes--){
+                valor = valor<<8 | MV->MEMORIA[i];
                 i++;
             }
 

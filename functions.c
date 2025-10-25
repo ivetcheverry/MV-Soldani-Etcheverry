@@ -365,7 +365,6 @@ void pop(tMV *MV)
 
 
     int base = (MV->REGS[SS].dato & 0xFFFF0000) >> 16;
-    printf("\n%08x", MV->SEGMENTTABLE[base]);
     int ss_inicio = getdireccionfisica(MV, MV->REGS[SS].dato);
     int ss_tamano = MV->SEGMENTTABLE[base] & 0xFFFF;
 
@@ -380,7 +379,7 @@ void pop(tMV *MV)
     }
     else
     {
-        for (i = posSP; cant_bytes > 0; cant_bytes--)
+        for (i = posSP+1; cant_bytes > 0; cant_bytes--)
         {
             valor = (valor << 8) | (MV->MEMORIA[i]);
             i++;

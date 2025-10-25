@@ -44,8 +44,9 @@ int get(tMV *MV, int OP) {
         cantbytes = ((MV->REGS[MAR].dato & 0xFFFF0000)>>16);
         inicio= ((MV->REGS[MAR].dato & 0xFFFF));
 
-        for (i = inicio ; i < inicio+cantbytes; i++) {
-            valor = (valor << 8) | (MV->MEMORIA[i]);
+        for (i = inicio + 1 ; cantbytes>0; cantbytes--) {
+            valor = (valor<<8) |(MV->MEMORIA[i]);
+            i++;
         }
 
         //valor = analizarsigno(valor,cantbytes);
@@ -99,7 +100,7 @@ void set(tMV *MV, int OP, int valorNuevo) {
         acceso_mem(MV,OP);
 
         cantbytes = ((MV->REGS[MAR].dato & 0xFFFF0000)>>16);
-        inicio= ((MV->REGS[MAR].dato & 0xFFFF))-1;
+        inicio= ((MV->REGS[MAR].dato & 0xFFFF));
 
         MV->REGS[MBR].dato = valorNuevo;
 

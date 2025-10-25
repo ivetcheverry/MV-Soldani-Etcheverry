@@ -68,12 +68,14 @@ void ejecucion(tMV *MV){
                 mostrar(MV,MV->REGS[OP2].dato,j);
                 printf("\n");
             } else{
-/*
-                printf("OP2 %08X", MV->REGS[OP2].dato);
-
-             printf("\nBP: %08x", MV->REGS[BP].dato);
-                printf("\nSP: %08x", MV->REGS[SP].dato);
-                printf("\nSS: %08x", MV->REGS[SS].dato); */
+              /*  printf("\nSS: %d", getdireccionfisica(MV,MV->REGS[SS].dato));
+                printf("\nBP: %d", getdireccionfisica(MV,MV->REGS[BP].dato));
+                printf("\nSP: %d", getdireccionfisica(MV,MV->REGS[SP].dato));
+                printf("\nEDX: %08x", MV->REGS[EDX].dato);
+                printf("\nECX: %08x", MV->REGS[ECX].dato);
+                printf("\n IP: %d", getdireccionfisica(MV,MV->REGS[IP].dato));
+                printf("\n OP2: %08x", MV->REGS[OP2].dato);
+                printf("\n");*/
 
                     MV->FUNCIONES[aux].func(MV);
 

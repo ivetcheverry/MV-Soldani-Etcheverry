@@ -233,6 +233,7 @@ void setSegmentTable(tMV *MV, FILE *arch)
 
 
         MV->REGS[BP].dato = MV->REGS[SP].dato;
+        //printf("VALOR SP EN MEMORIA: %d \n", getdireccionfisica(MV,MV->REGS[SP].dato));
         
         MV->REGS[IP].dato = MV->REGS[CS].dato+offset;
         MV->ENTRYPOINT = getdireccionfisica(MV,MV->REGS[IP].dato);
