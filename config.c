@@ -62,13 +62,13 @@ void init_funciones(tMV *MV)
     MV->FUNCIONES[RND].func = rnd;
 
     strcpy(MV->FUNCIONES[PUSH].nombre, "PUSH");
-    MV->FUNCIONES[RND].func = push;
+    MV->FUNCIONES[PUSH].func = push;
     strcpy(MV->FUNCIONES[POP].nombre, "POP");
-    MV->FUNCIONES[RND].func = pop;
+    MV->FUNCIONES[POP].func = pop;
     strcpy(MV->FUNCIONES[CALL_].nombre, "CALL");
-    MV->FUNCIONES[RND].func = call_;
+    MV->FUNCIONES[CALL_].func = call_;
     strcpy(MV->FUNCIONES[RET].nombre, "RET");
-    MV->FUNCIONES[RND].func = ret;
+    MV->FUNCIONES[RET].func = ret;
 }
 
 void init_regs(tMV *MV)
@@ -124,9 +124,9 @@ void setCodeSegment(FILE *arch, tMV *MV)
     {
         fread(&aux, 1, 1, arch);
         
-        /*printf("%3x",aux);
+        printf("%3x",aux);
         if (i>0 && i%15 == 0)       //escribe lo que lee del .vmx
-            printf("\n");*/
+            printf("\n");
         
         MV->MEMORIA[i] = aux;
     }
@@ -164,9 +164,10 @@ void setSegmentTable(tMV *MV, FILE *arch)
     int ordenlectura[5];
     int ordensegmentos[5];
 
-    if (MV->PARAM == -1)
+    if (MV->PARAM == -1){
         pos = 0;
-    else
+        MV->REGS[PS].dato = -1;
+    }else
         pos = 1;
 
     if (MV->VERSION == 1)
@@ -196,9 +197,11 @@ void setSegmentTable(tMV *MV, FILE *arch)
         {
             indice = ordenlectura[i];
             fread(&aux, 1, 1, arch);
-            MV->REGS[indice].dato = aux;
+            MV->REGS[indice].dato = aux<<8;
             fread(&aux, 1, 1, arch);
             MV->REGS[indice].dato += aux;
+
+            printf("\n %S : %d ",MV->REGS[indice].nombre,MV->REGS[indice].dato);
         }
 
         for (int i = 0; i < 5; i++)
@@ -222,8 +225,18 @@ void setSegmentTable(tMV *MV, FILE *arch)
         fread(&aux,1,1,arch);
         offset+=aux;
 
+
+        int base = (MV->REGS[SS].dato & 0xFFFF0000) >> 16;
+        int ss_tamano = MV->SEGMENTTABLE[base] & 0xFFFF;
+
+        MV->REGS[SP].dato = (base<<16) | tamano;
+
+
+        MV->REGS[BP].dato = MV->REGS[SP].dato;
+        
         MV->REGS[IP].dato = MV->REGS[CS].dato+offset;
         MV->ENTRYPOINT = getdireccionfisica(MV,MV->REGS[IP].dato);
+
     }
 }
 

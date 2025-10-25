@@ -57,24 +57,21 @@ void stop(tMV *MV)
     MV->REGS[IP].dato |= 0XFFFF;
 }
 
-void ret (tMV *MV){
+void ret(tMV *MV)
+{
+    MV->REGS[OP2].dato = 0x01000000;
+    MV->REGS[OP2].dato |= IP;
 
     pop(MV);
-    //devuelto en EAX
-    MV->REGS[IP].dato=MV->REGS[EAX].dato;
 }
-
-
-
 
 // 1 OPERANDO ---------------------------------------------------------------
 void sys(tMV *MV)
 {
-    int funcion, valor, aux, i,j,opanterior;
+    int funcion, valor, aux, i, j, opanterior;
     char binario[33], imprimir[8];
     int B, H, O, D, C;
     char entrada;
-
 
     valor = 0;
 
@@ -89,206 +86,206 @@ void sys(tMV *MV)
 
     int cantidadceldas = (MV->REGS[ECX].dato & 0XFFFF);
 
-    switch (funcion){
+    switch (funcion)
+    {
 
-        case 1:
-        {
-            for (i = 0; i < cantidadceldas; i++){
-                printf("\n");
-
-                printf("[%04X]  ", MV->REGS[MAR].dato & 0XFFFF);
-                if (D)
-                    scanf("%d", &valor);
-                if (C)
-                    scanf("%c", &valor);
-                if (O)
-                    scanf("%o", &valor);
-                if (H)
-                    scanf("%x", &valor);
-                if (B)
-                {
-                    scanf("%s", binario);
-                    for (j = strlen(binario) - 1; j >= 0; j--)
-                    {
-                        valor = valor << 1;
-                        valor |= binario[j] - '0';
-                    }
-                }
-
-                setsys(MV, valor);
-                MV->REGS[MAR].dato += ((MV->REGS[ECX].dato >> 16) & 0xffff);
-            }
-            break;
-        }
-        case 2:
-        {
-            for (i = 0; i < cantidadceldas; i++){
-                printf("\n");
-
-                valor = getsys(MV);
-                printf("[%04X]  ", MV->REGS[MAR].dato & 0XFFFF);
-
-                 if (B)
-                {
-                    unsigned int tmp = (unsigned int)valor;
-                    for (j = 31; j >= 0; j--)
-                    {
-                        binario[31 - j] = (tmp & (1U << j)) ? '1' : '0';
-                    }
-                    binario[32] = '\0';
-                    printf("0b%s\t", binario);
-                }
-
-                if (H)
-                    printf("0x%8x \t", (unsigned int)valor);
-
-                if (O)
-                    printf("0o%o \t", (unsigned int)valor);
-                
-
-                
-                int tmp_val = valor; // guardo el valor original
-                if (C)
-                {
-
-                    for (j = 0; j < ((MV->REGS[ECX].dato & 0xFFFF0000) >> 16); j++)
-                    {
-                        imprimir[j] = (char)tmp_val & 0xff;
-                        tmp_val = tmp_val >> 8;
-                    }
-                    for (j = ((MV->REGS[ECX].dato & 0xFFFF0000) >> 16) - 1; j >= 0; j--)
-                        if (imprimir[j] >= 32 && imprimir[j] < 128)
-                            printf("%c", (char)imprimir[j]);
-                        else
-                            printf(".");
-                    printf(" \t");
-                }
-
-                if (D)
-                    printf("%d\t", valor);
-
-                MV->REGS[MAR].dato += ((MV->REGS[ECX].dato >> 16) & 0xffff);
-                //printf("\n%08x",MV->REGS[MAR].dato);
-            }
-
-            break;
-        }
-        case 3:     //string read
+    case 1:
+    {
+        for (i = 0; i < cantidadceldas; i++)
         {
             printf("\n");
+
+            printf("[%04X]  ", MV->REGS[MAR].dato & 0XFFFF);
+            if (D)
+                scanf("%d", &valor);
+            if (C)
+                scanf("%c", &valor);
+            if (O)
+                scanf("%o", &valor);
+            if (H)
+                scanf("%x", &valor);
+            if (B)
+            {
+                scanf("%s", binario);
+                for (j = strlen(binario) - 1; j >= 0; j--)
+                {
+                    valor = valor << 1;
+                    valor |= binario[j] - '0';
+                }
+            }
+
+            setsys(MV, valor);
+            MV->REGS[MAR].dato += ((MV->REGS[ECX].dato >> 16) & 0xffff);
+        }
+        break;
+    }
+    case 2:
+    {
+        for (i = 0; i < cantidadceldas; i++)
+        {
+            printf("\n");
+
+            valor = getsys(MV);
             printf("[%04X]  ", MV->REGS[MAR].dato & 0XFFFF);
 
-            char buffer[512]; // limite razonable
-            int len = 0;
-
-            fflush(stdout);
-            if (fgets(buffer, sizeof(buffer), stdin) == NULL)
-                return;
-
-            // Reemplazar '\n' por '\0'
-            buffer[strcspn(buffer, "\n")] = '\0';
-
-            // Máximo de caracteres a leer
-            int max_len = MV->REGS[ECX].dato;
-
-            if (max_len == -1)
-                max_len = strlen(buffer);
-            else if (max_len > (int)strlen(buffer))
-                max_len = strlen(buffer);
-
-            // Obtener dirección lógica desde EDX
-            int seg_idx = (MV->REGS[EDX].dato >> 16) & 0xFFFF;
-            int offset = MV->REGS[EDX].dato & 0xFFFF;
-
-            // Validar segmento
-            if (seg_idx < 0 || seg_idx > (MV->REGS[SS].dato >> 16))
-                segmentationfault();
-
-            // Dirección física real
-            int base_fisica = ((MV->SEGMENTTABLE[seg_idx] >> 16) & 0xFFFF) + offset;
-
-            // Chequeo de overflow del segmento
-            int seg_tam = MV->SEGMENTTABLE[seg_idx] & 0xFFFF;
-            if ((offset + max_len + 1) > seg_tam)
-                segmentationfault();
-
-            // Escribir en memoria byte a byte
-            fgets(buffer, max_len, stdin);
-
-            setsys_buffer(MV, buffer, strlen(buffer));
-
-            break;
-        }
-        case 4:         //string write
-        {
-
-            // Obtener dirección lógica desde EDX
-            int seg_idx = (MV->REGS[EDX].dato >> 16) & 0xFFFF;
-            int offset  = MV->REGS[EDX].dato & 0xFFFF;
-
-            // Validar segmento
-            if (seg_idx < 0 || seg_idx > (MV->REGS[SS].dato >> 16))
-                segmentationfault();
-
-            // Dirección física base
-            int base_fisica = ((MV->SEGMENTTABLE[seg_idx] >> 16) & 0xFFFF) + offset;
-
-            // Tamaño del segmento
-            int seg_tam = MV->SEGMENTTABLE[seg_idx] & 0xFFFF;
-
-            // Obtener el string desde memoria (hasta '\0' o límite de segmento)
-            char buffer[512];
-            getsys_buffer(MV, buffer, base_fisica, seg_tam - offset);
-
-            // Imprimir
-            printf("\n");
-            printf("%s", buffer);
-
-            // Actualizar MBR con último carácter leído
-            if (strlen(buffer) > 0)
-                MV->REGS[MBR].dato = (unsigned char) buffer[strlen(buffer) - 1];
-            else
-                MV->REGS[MBR].dato = 0;
-
-            break;
-        }
-        case 7:
-        {
-            printf("\n");
-            printf("\033[2J\033[H");  // Limpia pantalla y mueve el cursor al inicio
-            fflush(stdout);
-            break;
-        }
-        case 0xF:
-        {
-            entrada = getchar();
-            do {
-                if (entrada == 'g')
-                    generarimagen(MV);
-                else if (entrada == '\n') {
-                    opanterior = MV->REGS[OP2].dato;
-                    generarimagen(MV);
-                    MV->UNPASO=1;
-                    ejecucion(MV);
-                    MV->REGS[OP2].dato = opanterior;
-                    MV->FUNCIONES[SYS].func(MV);
+            if (B)
+            {
+                unsigned int tmp = (unsigned int)valor;
+                for (j = 31; j >= 0; j--)
+                {
+                    binario[31 - j] = (tmp & (1U << j)) ? '1' : '0';
                 }
-                else if (entrada == 'q'){
-                    generarimagen(MV);
-                    MV->FUNCIONES[STOP].func(MV);
+                binario[32] = '\0';
+                printf("0b%s\t", binario);
+            }
+
+            if (H)
+                printf("0x%x \t", (unsigned int)valor);
+
+            if (O)
+                printf("0o%o \t", (unsigned int)valor);
+
+            int tmp_val = valor; // guardo el valor original
+            if (C)
+            {
+
+                for (j = 0; j < ((MV->REGS[ECX].dato & 0xFFFF0000) >> 16); j++)
+                {
+                    imprimir[j] = (char)tmp_val & 0xff;
+                    tmp_val = tmp_val >> 8;
                 }
-                else
-                    printf("CARACTER INVALIDO");
+                for (j = ((MV->REGS[ECX].dato & 0xFFFF0000) >> 16) - 1; j >= 0; j--)
+                    if (imprimir[j] >= 32 && imprimir[j] < 128)
+                        printf("%c", (char)imprimir[j]);
+                    else
+                        printf(".");
+                printf(" \t");
+            }
 
-            } while (entrada != 'g' && entrada != 'q' && entrada != '\n');
+            if (D)
+                printf("%d\t", valor);
 
-            break;
+            MV->REGS[MAR].dato += ((MV->REGS[ECX].dato >> 16) & 0xffff);
+            // printf("\n%08x",MV->REGS[MAR].dato);
         }
+
+        break;
     }
+    case 3: // string read
+    {
+        printf("\n");
+        printf("[%04X]  ", MV->REGS[MAR].dato & 0XFFFF);
 
-}
+        char buffer[512]; // limite razonable
+        int len = 0;
 
-void call_(tMV *MV) {
+        fflush(stdout);
+        if (fgets(buffer, sizeof(buffer), stdin) == NULL)
+            return;
+
+        // Reemplazar '\n' por '\0'
+        buffer[strcspn(buffer, "\n")] = '\0';
+
+        // Máximo de caracteres a leer
+        int max_len = MV->REGS[ECX].dato;
+
+        if (max_len == -1)
+            max_len = strlen(buffer);
+        else if (max_len > (int)strlen(buffer))
+            max_len = strlen(buffer);
+
+        // Obtener dirección lógica desde EDX
+        int seg_idx = (MV->REGS[EDX].dato >> 16) & 0xFFFF;
+        int offset = MV->REGS[EDX].dato & 0xFFFF;
+
+        // Validar segmento
+        if (seg_idx < 0 || seg_idx > (MV->REGS[SS].dato >> 16))
+            segmentationfault();
+
+        // Dirección física real
+        int base_fisica = ((MV->SEGMENTTABLE[seg_idx] >> 16) & 0xFFFF) + offset;
+
+        // Chequeo de overflow del segmento
+        int seg_tam = MV->SEGMENTTABLE[seg_idx] & 0xFFFF;
+        if ((offset + max_len + 1) > seg_tam)
+            segmentationfault();
+
+        // Escribir en memoria byte a byte
+        fgets(buffer, max_len, stdin);
+
+        setsys_buffer(MV, buffer, strlen(buffer));
+
+        break;
+    }
+    case 4: // string write
+    {
+
+        // Obtener dirección lógica desde EDX
+        int seg_idx = (MV->REGS[EDX].dato >> 16) & 0xFFFF;
+        int offset = MV->REGS[EDX].dato & 0xFFFF;
+
+        // Validar segmento
+        if (seg_idx < 0 || seg_idx > (MV->REGS[SS].dato >> 16))
+            segmentationfault();
+
+        // Dirección física base
+        int base_fisica = ((MV->SEGMENTTABLE[seg_idx] >> 16) & 0xFFFF) + offset;
+
+        // Tamaño del segmento
+        int seg_tam = MV->SEGMENTTABLE[seg_idx] & 0xFFFF;
+
+        // Obtener el string desde memoria (hasta '\0' o límite de segmento)
+        char buffer[512];
+        getsys_buffer(MV, buffer, base_fisica, seg_tam - offset);
+
+        // Imprimir
+        printf("\n");
+        printf("%s", buffer);
+
+        // Actualizar MBR con último carácter leído
+        if (strlen(buffer) > 0)
+            MV->REGS[MBR].dato = (unsigned char)buffer[strlen(buffer) - 1];
+        else
+            MV->REGS[MBR].dato = 0;
+
+        break;
+    }
+    case 7:
+    {
+        printf("\n");
+        printf("\033[2J\033[H"); // Limpia pantalla y mueve el cursor al inicio
+        fflush(stdout);
+        break;
+    }
+    case 0xF:
+    {
+        entrada = getchar();
+        do
+        {
+            if (entrada == 'g')
+                generarimagen(MV);
+            else if (entrada == '\n')
+            {
+                opanterior = MV->REGS[OP2].dato;
+                generarimagen(MV);
+                MV->UNPASO = 1;
+                ejecucion(MV);
+                MV->REGS[OP2].dato = opanterior;
+                MV->FUNCIONES[SYS].func(MV);
+            }
+            else if (entrada == 'q')
+            {
+                generarimagen(MV);
+                MV->FUNCIONES[STOP].func(MV);
+            }
+            else
+                printf("CARACTER INVALIDO");
+
+        } while (entrada != 'g' && entrada != 'q' && entrada != '\n');
+
+        break;
+    }
+    }
 }
 
 void jmp(tMV *MV)
@@ -358,110 +355,107 @@ void not_(tMV *MV)
     setCC(MV, get(MV, MV->REGS[OP2].dato));
 }
 
-void pop(tMV *MV) {
-    int sp_val = MV->REGS[SP].dato & 0xFFFF;    // offset dentro del stack segment (en palabras)
-    int ss_index = MV->REGS[SS].dato >> 16;     // índice del segmento de pila
-    int ss_base  = (MV->SEGMENTTABLE[ss_index] >> 16) & 0xFFFF;
-    int ss_limit = MV->SEGMENTTABLE[ss_index] & 0xFFFF;
+void pop(tMV *MV)
+{
+    int posSP;
+    int final;
+    int cant_bytes = 4;
+    int valor = 0;
+    int i;
+
+
+    int base = (MV->REGS[SS].dato & 0xFFFF0000) >> 16;
+    printf("\n%08x", MV->SEGMENTTABLE[base]);
+    int ss_inicio = getdireccionfisica(MV, MV->REGS[SS].dato);
+    int ss_tamano = MV->SEGMENTTABLE[base] & 0xFFFF;
+
+    final = ss_inicio + ss_tamano;
+
+    posSP = getdireccionfisica(MV, MV->REGS[SP].dato);
 
     // Verificar underflow
-    if (sp_val >= ss_limit) {
+    if (posSP + 4 > final)
+    {
         stack_underflow();
     }
+    else
+    {
+        for (i = posSP; cant_bytes > 0; cant_bytes--)
+        {
+            valor = (valor << 8) | (MV->MEMORIA[i]);
+            i++;
+        }
 
-    // Leer el valor (entero de 4 bytes)
-    int valor = MV->MEMORIA[ss_base + sp_val];
+    set(MV, MV->REGS[OP2].dato, valor);
 
-    // Obtengo el valor y se lo doy a EAX
-    MV->REGS[EAX].dato= get(MV, MV->REGS[OP2].dato);
-
-    // Incrementar SP en 1 palabra (4 bytes)
-    sp_val += 1;
-    MV->REGS[SP].dato = (MV->REGS[SP].dato & 0xFFFF0000) | sp_val;
-
+    MV->REGS[SP].dato += 4;
+    }
 }
 
-
-/* void push (tMV *MV) {
-    int valor;
-
-    MV->REGS[SP].dato -=4;
-
-    if(MV->REGS[SP].dato < MV->SEGMENTTABLE[baseSS])         //?? base ss
-        stackoverflow();
-
-    valor = get(MV, MV->REGS[OP2].dato);
-
-    if (valor & 0x8000)                     //extiendo signo
-        valor |= 0xFFFF0000;
-
-    int addr = MV->REGS[SP].dato;
-    MV->MEMORIA[addr]     = (valor >> 24) & 0xFF;
-    MV->MEMORIA[addr + 1] = (valor >> 16) & 0xFF;
-    MV->MEMORIA[addr + 2] = (valor >> 8)  & 0xFF;
-    MV->MEMORIA[addr + 3] = valor & 0xFF;
-
-
-
-} */
-
-void push(tMV *MV) {
-    int valor;
-
+void push(tMV *MV)
+{
+    int valorNuevo;
+    int cant_bytes = 4;
+    int i;
     // Obtener info del stack segment
-    int segIndex = (MV->REGS[SS].dato >> 16);
+    /*int segIndex = (MV->REGS[SS].dato >> 16);
     int segDesc = MV->SEGMENTTABLE[segIndex];
     int baseSS = (segDesc >> 16) & 0xFFFF;
     int tamanioSS = segDesc & 0xFFFF;
 
     // Leer SP actual
     int offsetSP = MV->REGS[SP].dato & 0xFFFF;
+    */
 
+    int posSP = getdireccionfisica(MV, MV->REGS[SP].dato);
     // Decrementar SP en 4
-    offsetSP -= 4;
-
+    posSP -= 4;
     // Verificar overflow
-    if (offsetSP < 0) {
+    if (posSP < getdireccionfisica(MV, MV->REGS[SS].dato))
+    {
         stack_overflow();
     }
+    else
+    {
+        // Obtener valor del operando
+        valorNuevo = get(MV, MV->REGS[OP2].dato); //  -> 5
+        // Extender signo a 32 bits si es 16 bits con signo
+        if (valorNuevo & 0x8000)
+            valorNuevo |= 0xFFFF0000;
 
-    // Obtener valor del operando
-    valor = get(MV, MV->REGS[OP2].dato);
+        for (i = posSP + 4; cant_bytes > 0; cant_bytes--)
+        {
+            MV->MEMORIA[i] = valorNuevo & 0xFF;
+            valorNuevo = valorNuevo >> 8;
+            i--;
+        }
 
-    // Extender signo a 32 bits si es 16 bits con signo
-    if (valor & 0x8000)
-        valor |= 0xFFFF0000;
+        // Escribir en la pila (MSB → LSB)
+        /* int addr = baseSS + offsetSP;
+         MV->MEMORIA[addr]     = (valor >> 24) & 0xFF;
+         MV->MEMORIA[addr + 1] = (valor >> 16) & 0xFF;
+         MV->MEMORIA[addr + 2] = (valor >> 8) & 0xFF;
+         MV->MEMORIA[addr + 3] = valor & 0xFF; */
 
-    // Escribir en la pila (MSB → LSB)
-   /* int addr = baseSS + offsetSP;
-    MV->MEMORIA[addr]     = (valor >> 24) & 0xFF;
-    MV->MEMORIA[addr + 1] = (valor >> 16) & 0xFF;
-    MV->MEMORIA[addr + 2] = (valor >> 8) & 0xFF;
-    MV->MEMORIA[addr + 3] = valor & 0xFF; */
-
-    set(MV, MV->REGS[OP2].dato, valor);
-
-    // Actualizar SP
-    MV->REGS[SP].dato = (segIndex << 16) | offsetSP;
+        MV->REGS[SP].dato -= 4;
+    }
 }
 
-
-void call (tMV *MV) {
+void call_(tMV *MV)
+{
     /*
     Primero guardamos la direccion de la subrutina en una variable aux.
     En OP2 guardamos el IP que teniamos antes de ejecutar subrutina para asi reutilizar el push
     por ultimo seteamos IP con la direccion de la subrutina.
     */
     int aux = MV->REGS[OP2].dato;
-    MV->REGS[OP2].dato = MV->REGS[IP].dato;
+
+    MV->REGS[OP2].dato = 0x01000000;
+    MV->REGS[OP2].dato |= IP;
     push(MV);
-    //MV->REGS[IP].dato = aux;
+    MV->REGS[OP2].dato = aux;
     jmp(MV);
 }
-
-
-
-
 
 // 2 OPERANDOS --------------------------------------------------------------
 
@@ -533,7 +527,7 @@ void cmp(tMV *MV)
 void shl(tMV *MV)
 {
     int v2;
-
+    // cantidad de bits a desplazar
     v2 = get(MV, MV->REGS[OP2].dato);
 
     set(MV, MV->REGS[OP1].dato, (get(MV, MV->REGS[OP1].dato) << v2));
@@ -646,7 +640,8 @@ void divisionzero()
     exit(1);
 }
 
-void memoria_insuficiente(){
+void memoria_insuficiente()
+{
     printf("\nERROR! MEMORIA INSUFICIENTE!");
     exit(1);
 }

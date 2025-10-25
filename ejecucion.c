@@ -52,7 +52,7 @@ void ejecucion(tMV *MV){
         int aux= MV->REGS[OPC].dato;
         MV->REGS[IP].dato++;
 
-        if ( (aux >= 0 && aux<=8) || (aux>=15 && aux <= 31) ){
+        if ( (aux >= 0 && aux<=8) || (aux>=11 && aux <= 31) ){
             if (MV->DISSASEMBLER) {
                 if (ipvalor == MV->ENTRYPOINT)
                     printf(">");
@@ -68,13 +68,15 @@ void ejecucion(tMV *MV){
                 mostrar(MV,MV->REGS[OP2].dato,j);
                 printf("\n");
             } else{
-                /*printf("\nOP1: %0x", MV->REGS[OP1].dato);
-                printf("\nOP2: %0x\n", MV->REGS[OP2].dato);
-                printf("\nDS %08x", MV->REGS[DS].dato);*/
+/*
+                printf("OP2 %08X", MV->REGS[OP2].dato);
+
+             printf("\nBP: %08x", MV->REGS[BP].dato);
+                printf("\nSP: %08x", MV->REGS[SP].dato);
+                printf("\nSS: %08x", MV->REGS[SS].dato); */
 
                     MV->FUNCIONES[aux].func(MV);
 
-                
             }
         }
         else

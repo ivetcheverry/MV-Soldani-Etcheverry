@@ -17,15 +17,15 @@ int get(tMV *MV, int OP) {
         
     }else if (tipo==REG){
         regcod= OP & 0x1F;  
-        valor = analizarsigno(MV->REGS[regcod].dato,2);
-        opreg = (OP & 0b11000000)>>6;
+        valor = MV->REGS[regcod].dato;
 
+        opreg = (OP & 0b11000000)>>6;
         switch (opreg) {
             case 0b11: //AX
                 valor=valor & 0xFFFF;
                 break;
 
-            case 0b10: // AH
+            case 0b10: // AH                             
                 valor=(valor & 0xFF00)>>8;        
                 break;
 
@@ -57,38 +57,43 @@ int get(tMV *MV, int OP) {
 
 }
 
+
 void set(tMV *MV, int OP, int valorNuevo) {
     int i, tipo, valor;
     int regcod, offset;
-    int opreg;
+    int opreg, valorviejo;
     int inicio,cantbytes;
 
     tipo = OP >>24;
 
     if (tipo==REG){
+        regcod= OP & 0X1F;
 
+        valorviejo=MV->REGS[regcod].dato;
         opreg=(OP & 0b11000000)>>6;
 
         switch (opreg) {
-            case 0b11:
-                valorNuevo=valorNuevo & 0xFFFF;           // AX
+            case 0b11: // AX
+                valorviejo= valorviejo & 0xFFFF0000;
+                valorNuevo = valorNuevo & 0xFFFF;           
                 break;
 
-            case 0b10:
-                valorNuevo=(valorNuevo & 0xFF)>>8;        // AH
+            case 0b10:  // AH
+                valorviejo= valorviejo & 0xFFFF00FF;
+                valorNuevo= valorNuevo & 0xFF00;      
                 break;
 
-            case 0b01:
-                valorNuevo=valorNuevo & 0xFF;           // AL
+            case 0b01: // AL
+                valorviejo= valorviejo & 0xFFFFFF00;
+                valorNuevo= valorNuevo & 0xFF;           
                 break;
 
-            case 0b00:
-                valorNuevo=valorNuevo;                  //EAX
+            case 0b00: //EAX
+                valorviejo= 0x0;             
                 break;
         }
 
-        regcod= OP & 0X1F;
-        MV->REGS[regcod].dato = valorNuevo;
+        MV->REGS[regcod].dato = valorviejo | valorNuevo;            //queda lo viejo y pone lo nuevo en caso de no usar todo el registro
     }
     else if (tipo==MEMO){
         acceso_mem(MV,OP);

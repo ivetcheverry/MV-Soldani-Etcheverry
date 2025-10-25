@@ -10,7 +10,7 @@ ARCHIVO PARA GUARDAR FUNCIONES ESPECIFICOS DE LOS ACCESOS A MEMORIA
 
 void acceso_mem (tMV *MV, int OP){
     int offset=0,regcod,base, sys=0;
-    int cantbytes=0; int inicio=0;
+    int cantbytes=0; int inicio=0;  
     int base_segmento, size_segmento;
 
 
@@ -49,9 +49,14 @@ void acceso_mem (tMV *MV, int OP){
     inicio = ((MV->REGS[MAR].dato & 0xFFFF));
 
 
-    if  (inicio+cantbytes > (MV->SEGMENTTABLE[base]&0xFFFF)  +  ((MV->SEGMENTTABLE[base]>>16)&0xFFFF) || (inicio < ((MV->SEGMENTTABLE[base]>>16)&0xFFFF)) )
+    if (base != MV->REGS[SS].dato>>16){
+
+    if  (inicio+cantbytes >= (MV->SEGMENTTABLE[base]&0xFFFF)  +  ((MV->SEGMENTTABLE[base]>>16)&0xFFFF)) 
+        segmentationfault();
+    else if (inicio < ((MV->SEGMENTTABLE[base]>>16)&0xFFFF))
         segmentationfault();
 
+    }
 
 
     /*

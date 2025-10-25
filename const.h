@@ -1,6 +1,6 @@
 #pragma once
 
-#define NOMBREARCHIVO "sample9.vmx"
+#define NOMBREARCHIVO "prueba.vmx"
 
 #define TABLA_N 8
 #define NMASK16 0x8000
@@ -54,7 +54,7 @@ typedef struct tMV {
 #define ADD  17
 #define SUB  18
 #define MUL  19
-#define DIV_  20
+#define DIV_ 20
 #define CMP  21
 #define SHL  22
 #define SHR  23
