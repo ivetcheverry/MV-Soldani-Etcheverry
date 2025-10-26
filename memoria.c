@@ -13,9 +13,8 @@ void acceso_mem (tMV *MV, int OP){
     int cantbytes=0; int inicio=0;  
     int base_segmento, size_segmento;
 
-
     if ( ( (OP & 0xFF000000) >>24 ) == 3) {
-        regcod = (OP & 0xFF0000) >> 16;
+        regcod = (OP & 0x1F0000) >> 16;
         offset=  analizarsigno(OP & 0xFFFF,2);
     }
     else {      //SYS
@@ -35,7 +34,7 @@ void acceso_mem (tMV *MV, int OP){
     if(sys)
         MV->REGS[MAR].dato = (MV->REGS[ECX].dato & 0XFFFF0000) >> 16;
     else
-        MV->REGS[MAR].dato = 0x0 | get_tipo_mem(MV->REGS[OP2].dato);    //obtengo cantidad de bytes a escribir/leer en memoria
+        MV->REGS[MAR].dato = 0x0 | get_tipo_mem(OP);    //obtengo cantidad de bytes a escribir/leer en memoria
 
     //printf("%08x",MV->REGS[MAR].dato);
 
@@ -76,7 +75,7 @@ int getsys(tMV *MV) {
         cantbytes = ((MV->REGS[MAR].dato & 0xFFFF0000)>>16);
         inicio= ((MV->REGS[MAR].dato & 0xFFFF));
 
-            for(i = inicio+1 ; cantbytes > 0; cantbytes--){
+            for(i = inicio + 1 ; cantbytes > 0; cantbytes--){
                 valor = valor<<8 | MV->MEMORIA[i];
                 i++;
             }
@@ -111,13 +110,13 @@ void setsys(tMV *MV, int valorNuevo) {
     int inicio,cantbytes;
 
         cantbytes = ((MV->REGS[MAR].dato & 0xFFFF0000)>>16);
-        inicio= ((MV->REGS[MAR].dato & 0xFFFF))-1;
+        inicio= ((MV->REGS[MAR].dato & 0xFFFF));
 
         MV->REGS[MBR].dato = valorNuevo;
 
         for(i= inicio + cantbytes ; cantbytes > 0; cantbytes --){
             MV->MEMORIA[i] = valorNuevo & 0xFF;
-                valorNuevo = valorNuevo >> 8;
+            valorNuevo = valorNuevo >> 8;
             i--;
         }
 

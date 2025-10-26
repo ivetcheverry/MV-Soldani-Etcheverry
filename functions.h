@@ -37,6 +37,7 @@ void setsys_buffer(tMV *MV, char *, int);
 void getsys_buffer(tMV *MV, char *, int,int );
 
 int get_tipo_mem(int OP);
+void armaroperando(tMV *MV, int reg, char letra, char * nombre);
 
 int analizarsigno(int valor, int cantbytes);
 

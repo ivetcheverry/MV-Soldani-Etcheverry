@@ -17,6 +17,8 @@ int getdireccionfisica(tMV *MV, int Puntero)
     pos = (MV->SEGMENTTABLE[basePuntero] >> 16) & 0xFFFF; // Obtengo el inicio
     pos += offsetPuntero;
 
+    pos = analizarsigno(pos,2);
+
     return pos;
 }
 
@@ -24,7 +26,6 @@ int get_tipo_mem(int OP)
 {
     int valor = 4;
     int bits;
-
     bits = (OP & 0x00FF0000) >> 22; // dos bits mas significativos del codigo de memoria
 
     return (valor - bits);
@@ -32,6 +33,7 @@ int get_tipo_mem(int OP)
 
 void subrutinaprincipal(tMV *MV)
 {
+    MV->REGS[IP].dato = MV->ENTRYPOINT;
     int ip_anterior = MV->REGS[IP].dato;
 
     MV->REGS[OP2].dato = MV->REGS[PS].dato;

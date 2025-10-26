@@ -1,6 +1,8 @@
 #pragma once
 
 #define NOMBREARCHIVO "prueba.vmx"
+//#define NOMBREARCHIVO "pruebaimagen.vmi"
+#define NOMBREIMG "pruebaimagen.vmi"
 
 #define TABLA_N 8
 #define NMASK16 0x8000
@@ -28,7 +30,7 @@ typedef struct tMV {
     int PARAM;
     int ARGC;
     int DISSASEMBLER;
-    char *NOMBREIMAGEN;
+    char NOMBREIMAGEN[30];
     int ENTRYPOINT;
     int UNPASO;
 

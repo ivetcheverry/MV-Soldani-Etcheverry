@@ -81,7 +81,7 @@ void set(tMV *MV, int OP, int valorNuevo) {
 
             case 0b10:  // AH
                 valorviejo= valorviejo & 0xFFFF00FF;
-                valorNuevo= valorNuevo & 0xFF00;      
+                valorNuevo= (valorNuevo << 8) & 0xFF00; 
                 break;
 
             case 0b01: // AL

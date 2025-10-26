@@ -1,21 +1,28 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include "const.h"
 #include "functions.h"
 #include <time.h>
 
 void mostrar(tMV *MV, int OP, int j)
 {
-    int tipo, r, off;
+    int tipo, r, off, tamano;
 
     tipo = OP >> 24;
+    char caracteres[] = {'b','w',' ','l'}, tamanochar;
+    char nombre[4];
+
+    
 
     if (tipo != 0)
     {
 
         if (tipo == MEMO)
         {
+            tamano = 3-((OP & 0x00FF0000) >> 22);
+            tamanochar = caracteres[tamano];
             r = (OP >> 16) & 0x1F;
             off = OP & 0xFFFF;
 
@@ -23,15 +30,23 @@ void mostrar(tMV *MV, int OP, int j)
                 off = (off ^ NMASK16) - NMASK16;
 
             if (off != 0)
-                printf(" [%3s%+3d]", MV->REGS[r].nombre, off);
+                printf(" %c[%s%+d] ",tamanochar, MV->REGS[r].nombre, off);
             else
-                printf(" [%3s]", MV->REGS[r].nombre);
+                printf(" %c[%s] ",tamanochar, MV->REGS[r].nombre);
         }
 
         else if (tipo == REG)
         {
+            tamano = (OP & 0b11000000)>>6;
             r = OP & 0X1F;
-            printf(" %3s", MV->REGS[r].nombre);
+            switch (tamano) {
+                case 0: {strcpy(nombre,MV->REGS[r].nombre); break;}
+                case 1: {armaroperando(MV,r,'L',nombre); break;}
+                case 2: {armaroperando(MV,r,'H',nombre); break;}
+                case 3: {armaroperando(MV,r,'X',nombre); break;}
+            }
+
+            printf(" %3s", nombre);
         }
         else
         { // INMEDIATO
@@ -47,6 +62,14 @@ void mostrar(tMV *MV, int OP, int j)
         }
     }
 }
+
+void armaroperando(tMV *MV, int reg, char letra, char *nombre) {
+    
+    nombre [2] = '\0';
+    nombre [0] = MV->REGS[reg].nombre[1];
+    nombre [1] = letra;
+}
+
 
 // SIN OPERANDOS ------------------------------------------------------------
 void stop(tMV *MV)
@@ -259,9 +282,11 @@ void sys(tMV *MV)
     }
     case 0xF:
     {
-        entrada = getchar();
-        do
-        {
+        do{
+
+        printf("\nIngresar caracter: ");
+        scanf("%c",&entrada);
+        entrada = tolower(entrada);
             if (entrada == 'g')
                 generarimagen(MV);
             else if (entrada == '\n')
@@ -271,7 +296,8 @@ void sys(tMV *MV)
                 MV->UNPASO = 1;
                 ejecucion(MV);
                 MV->REGS[OP2].dato = opanterior;
-                MV->FUNCIONES[SYS].func(MV);
+                if (getdireccionfisica(MV,MV->REGS[IP].dato)!=-1)
+                    MV->FUNCIONES[SYS].func(MV);
             }
             else if (entrada == 'q')
             {

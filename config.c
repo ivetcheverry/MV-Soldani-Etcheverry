@@ -106,46 +106,45 @@ void init_regs(tMV *MV)
     strcpy(MV->REGS[SS].nombre, "SS");
     strcpy(MV->REGS[KS].nombre, "KS");
     strcpy(MV->REGS[PS].nombre, "PS");
-
 }
-
 
 void setCodeSegment(FILE *arch, tMV *MV)
 {
     // vuelca el codigo al code segment
-    int i, aux, liminf,limsup,base;
+    int i, aux, liminf, limsup, base;
 
-    base = (MV->REGS[CS].dato & 0xFFFF0000)>>16;
-    liminf = (MV->SEGMENTTABLE[base]&0xFFFF0000) >> 16;
-    limsup = (MV->SEGMENTTABLE[base]&0xFFFF0000) >> 16;
-    limsup += MV->SEGMENTTABLE[base]&0xFFFF;
+    base = (MV->REGS[CS].dato & 0xFFFF0000) >> 16;
+    liminf = (MV->SEGMENTTABLE[base] & 0xFFFF0000) >> 16;
+    limsup = (MV->SEGMENTTABLE[base] & 0xFFFF0000) >> 16;
+    limsup += MV->SEGMENTTABLE[base] & 0xFFFF;
 
     for (i = liminf; i < limsup; i++)
     {
         fread(&aux, 1, 1, arch);
-        
-        printf("%3x",aux);
+
+        /*printf("%3x",aux);
         if (i>0 && i%15 == 0)       //escribe lo que lee del .vmx
-            printf("\n");
-        
+            printf("\n");*/
+
         MV->MEMORIA[i] = aux;
     }
 }
 
-void addsegmento(tMV *MV, int inicio, int tamano, int pos) {
+void addsegmento(tMV *MV, int inicio, int tamano, int pos)
+{
     /*
     Recibe todos los parametros, lo unico que hace es insertar los segmentos en la tabla.
     Verifica si se puede ingresar el segmento o la memoria es insuficiente.
     */
     int posicion_memoria;
     posicion_memoria = inicio + tamano;
-    if (posicion_memoria <= MV->MEM){
-    MV->SEGMENTTABLE[pos] = (inicio<<16)&0xFFFF0000;
-    MV->SEGMENTTABLE[pos] += tamano;
+    if (posicion_memoria <= MV->MEM)
+    {
+        MV->SEGMENTTABLE[pos] = (inicio << 16) & 0xFFFF0000;
+        MV->SEGMENTTABLE[pos] += tamano;
     }
     else
         memoria_insuficiente();
-
 }
 
 void setSegmentTable(tMV *MV, FILE *arch)
@@ -164,44 +163,55 @@ void setSegmentTable(tMV *MV, FILE *arch)
     int ordenlectura[5];
     int ordensegmentos[5];
 
-    if (MV->PARAM == -1){
+    if (MV->PARAM == -1)
+    {
         pos = 0;
         MV->REGS[PS].dato = -1;
-    }else
+    }
+    else
         pos = 1;
 
     if (MV->VERSION == 1)
     {
-        aux=0;
+        aux = 0;
         fread(&aux, 1, 1, arch);
-        //printf("%x",aux);
+        // printf("%x",aux);
         tamano = aux;
         fread(&aux, 1, 1, arch);
-        //printf("%x",aux);
+        // printf("%x",aux);
         tamano += aux;
 
         addsegmento(MV, inicio, tamano, pos);
-        MV->REGS[IP].dato = MV->REGS[CS].dato = pos<<16;
-        inicio += tamano;  pos++;
+        MV->REGS[IP].dato = MV->REGS[CS].dato = pos << 16;
+        inicio += tamano;
+        pos++;
         addsegmento(MV, inicio, MV->MEM - inicio, pos);
-        MV->REGS[DS].dato = pos<<16;
+        MV->REGS[DS].dato = pos << 16;
     }
 
     else
     {
-          ordenlectura[0] = CS;   ordenlectura[1] = DS;   ordenlectura[2] = ES;   ordenlectura[3] = SS;   ordenlectura[4] = KS;
-        ordensegmentos[0] = KS; ordensegmentos[1] = CS; ordensegmentos[2] = DS; ordensegmentos[3] = ES; ordensegmentos[4] = SS;
+        ordenlectura[0] = CS;
+        ordenlectura[1] = DS;
+        ordenlectura[2] = ES;
+        ordenlectura[3] = SS;
+        ordenlectura[4] = KS;
+        ordensegmentos[0] = KS;
+        ordensegmentos[1] = CS;
+        ordensegmentos[2] = DS;
+        ordensegmentos[3] = ES;
+        ordensegmentos[4] = SS;
         // ESTOS FREAD LEERAN EL HEADER DEL VMX, Y EN CADA REGISTRO GUARDARÁ TEMPORALMENTE EL TAMAÑO DE CADA SEGMENTO
 
         for (int i = 0; i < 5; i++)
         {
             indice = ordenlectura[i];
             fread(&aux, 1, 1, arch);
-            MV->REGS[indice].dato = aux<<8;
+            MV->REGS[indice].dato = aux << 8;
             fread(&aux, 1, 1, arch);
             MV->REGS[indice].dato += aux;
 
-            printf("\n %S : %d ",MV->REGS[indice].nombre,MV->REGS[indice].dato);
+            printf("\n %S : %d ", MV->REGS[indice].nombre, MV->REGS[indice].dato);
         }
 
         for (int i = 0; i < 5; i++)
@@ -220,24 +230,21 @@ void setSegmentTable(tMV *MV, FILE *arch)
         }
 
         // Aprovecho el archivo que esta abierto para leer el entry point
-        fread(&aux,1,1,arch);
+        fread(&aux, 1, 1, arch);
         offset = aux;
-        fread(&aux,1,1,arch);
-        offset+=aux;
-
+        fread(&aux, 1, 1, arch);
+        offset += aux;
 
         int base = (MV->REGS[SS].dato & 0xFFFF0000) >> 16;
         int ss_tamano = MV->SEGMENTTABLE[base] & 0xFFFF;
 
-        MV->REGS[SP].dato = (base<<16) | tamano;
-
+        MV->REGS[SP].dato = (base << 16) | tamano;
 
         MV->REGS[BP].dato = MV->REGS[SP].dato;
-        //printf("VALOR SP EN MEMORIA: %d \n", getdireccionfisica(MV,MV->REGS[SP].dato));
-        
-        MV->REGS[IP].dato = MV->REGS[CS].dato+offset;
-        MV->ENTRYPOINT = getdireccionfisica(MV,MV->REGS[IP].dato);
+        // printf("VALOR SP EN MEMORIA: %d \n", getdireccionfisica(MV,MV->REGS[SP].dato));
 
+        MV->REGS[IP].dato = MV->REGS[CS].dato + offset;
+        MV->ENTRYPOINT = getdireccionfisica(MV, MV->REGS[IP].dato);
     }
 }
 
@@ -251,20 +258,23 @@ void setParamSegment(tMV *MV, int argsc, char *args[])
     */
 
     int j, w, i;
-    int offsets[20], inicio=0, tamano=0;
+    int offsets[20], inicio = 0, tamano = 0;
     int puntero;
 
-    int cant_palabras = argsc - MV->PARAM; //MV->PARAM tiene el indice dentro del vector args[] donde comienza la primer palabra
-    i=0;
+    int cant_palabras = argsc - MV->PARAM; // MV->PARAM tiene el indice dentro del vector args[] donde comienza la primer palabra
+    i = 0;
 
-    MV->ARGC= cant_palabras;
+    MV->ARGC = cant_palabras;
 
-    for (w = 0; w < cant_palabras; w++){
+    for (w = 0; w < cant_palabras; w++)
+    {
         offsets[w] = i;
         j = 0;
-        while (j != '\0'){
+        while (j != '\0')
+        {
             MV->MEMORIA[i] = args[i][j]; // guardo en memoria, la letra [j] de la palabra guardada en args[i]
-            i++; j++;
+            i++;
+            j++;
         }
         MV->MEMORIA[i] = '\0';
         i++;
@@ -273,73 +283,73 @@ void setParamSegment(tMV *MV, int argsc, char *args[])
     // Ya guardadas las palabras en memoria, puedo armar el puntero de PS al primer puntero dentro de memoria.
     MV->REGS[PS].dato = i;
 
-    for (w=0; w<cant_palabras; w++) {
+    for (w = 0; w < cant_palabras; w++)
+    {
         puntero = offsets[w];
-        MV->MEMORIA[i]= puntero&0xFF000000; i++;
-        MV->MEMORIA[i]= puntero&0xFF0000;   i++;
-        MV->MEMORIA[i]= puntero&0xFF00;     i++;
-        MV->MEMORIA[i]= puntero&0xFF;       i++;
+        MV->MEMORIA[i] = puntero & 0xFF000000;
+        i++;
+        MV->MEMORIA[i] = puntero & 0xFF0000;
+        i++;
+        MV->MEMORIA[i] = puntero & 0xFF00;
+        i++;
+        MV->MEMORIA[i] = puntero & 0xFF;
+        i++;
     }
 
-    addsegmento(MV,0,i,0);
+    addsegmento(MV, 0, i, 0);
 }
 
-void generarimagen(tMV *MV) {
+void generarimagen(tMV *MV)
+{
 
     int i;
-    FILE *arch = fopen(MV->NOMBREIMAGEN,"wb");
-    int HEADER[6] = {'V','M','I','2','5','1'};
+    FILE *arch = fopen(MV->NOMBREIMAGEN, "wb");
+    int HEADER[6] = {'V', 'M', 'I', '2', '5', 1};
 
-    if (arch) {
-        //CARGA HEADER
-        for (i=0;i<6;i++)
-            fwrite(&HEADER[i],1,1,arch);
+    if (arch)
+    {
+        // CARGA HEADER
+        for (i = 0; i < 6; i++)
+            fwrite(&HEADER[i], 1, 1, arch);
 
-        //CARGA TABLA DE SEGMENTOS
-        for (i=0;i<8;i++)
-            fwrite(&MV->SEGMENTTABLE[i],1,1,arch);
+        fwrite(&(MV->MEM), 1, 2, arch);
 
-        for (i=0; i<MV->MEM; i++) {
-            fwrite(&MV->MEMORIA[i],1,1,arch);
-        }
+        // CARGA REGISTROS
+        for (i = 0; i < 32; i++)
+            fwrite(&MV->REGS[i].dato, sizeof(int), 1, arch);
 
-    fclose(arch);
+        // CARGA TABLA DE SEGMENTOS
+        for (i = 0; i < 8; i++)
+            fwrite(&MV->SEGMENTTABLE[i], sizeof(int), 1, arch);
 
-    } else
+        fwrite(MV->MEMORIA, sizeof(int), MV->MEM, arch);
+
+        fclose(arch);
+    }
+    else
         printf("NO SE PUDO ABRIR/GENERAR EL ARCHIVO");
 }
 
-
-void cargarimagen(tMV *MV, FILE *arch) {
-    int aux=0,mem=0,i;
+void cargarimagen(tMV *MV, FILE *arch)
+{
+    int aux = 0, i;
     int regsaux[32], tablaaux[8];
-
-
-    fread(&aux,1,1,arch); mem = aux;
-    fread(&aux,1,1,arch); mem += aux;
-
-    MV->MEM=mem;
-
-    i=0;
-    fread(regsaux,4,32,arch);
-
-    for (i=0;i<32;i++)
-    MV->REGS[i].dato = regsaux[i];
-
+    fread(&aux, 2, 1, arch);
+    aux;
+    MV->MEM = aux;
+    i = 0;
+    fread(regsaux, 4, 32, arch);
+    for (i = 0; i < 32; i++)
+        MV->REGS[i].dato = regsaux[i];
     MV->ENTRYPOINT = getdireccionfisica(MV, MV->REGS[IP].dato);
-
-    fread(tablaaux,4,8,arch);
-    for (i=0;i<8;i++)
+    fread(tablaaux, 4, 8, arch);
+    for (i = 0; i < 8; i++)
         MV->SEGMENTTABLE[i] = tablaaux[i];
+    fread(MV->MEMORIA, 1, MV->MEM, arch);
 
-    i=0;
-    while (fread(&aux,1,1,arch)) {
-        MV->MEMORIA[i] = aux;
-        i++;
-    }
 }
 
-void init_MV(tMV *MV, int *OK, int CONTROLVMX[],int CONTROLVMI[], int argsc, char *args[])
+void init_MV(tMV *MV, int *OK, int CONTROLVMX[], int CONTROLVMI[], int argsc, char *args[])
 {
 
     FILE *arch;
@@ -350,7 +360,7 @@ void init_MV(tMV *MV, int *OK, int CONTROLVMX[],int CONTROLVMI[], int argsc, cha
 
     MV->MEM = RAMDEFAULT;
     MV->DISSASEMBLER = 0;
-    MV->NOMBREIMAGEN = NULL;
+    strcpy(MV->NOMBREIMAGEN, NOMBREIMG);
     MV->PARAM = -1;
 
     for (i = 2; i < argsc; i++)
@@ -377,22 +387,23 @@ void init_MV(tMV *MV, int *OK, int CONTROLVMX[],int CONTROLVMI[], int argsc, cha
             break;             // Es el ultimo flag, no recorro mas
         }
     }
-   // arch = fopen(args[1], "rb");
+    // arch = fopen(args[1], "rb");
     arch = fopen(NOMBREARCHIVO, "rb");
-   // tipoParametro = strrchr(args[1], '.');
-    tipoParametro = ".vmx";
+    tipoParametro = strrchr(NOMBREARCHIVO, '.');
+
+    strcpy(MV->NOMBREIMAGEN, NOMBREIMG);
 
     if (arch)
     {
-        if (tipoParametro == ".vmx")
+        if (strcmp(tipoParametro, ".vmx") == 0)
         { // archivo que le pasamos tiene extension .vmx
-            i=0;
-            //printf("\n");
+            i = 0;
+            // printf("\n");
             fread(&aux, 1, 1, arch); // CONTROLO LOS CARACTERES "VMX25"
 
             while (i < 5 && aux - CONTROLVMX[i] == 0)
             {
-                //printf("%3c",aux);
+                // printf("%3c",aux);
                 i++;
                 fread(&aux, 1, 1, arch);
             }
@@ -402,29 +413,29 @@ void init_MV(tMV *MV, int *OK, int CONTROLVMX[],int CONTROLVMI[], int argsc, cha
             }
             else
             { // CONTROLO VERSIONES
-                 //printf("\n VERSION: %d \n\n", aux);
+              // printf("\n VERSION: %d \n\n", aux);
                 if (aux != 1 && aux != 2)
                     printf("\n VERSION NO SOPORTADA!");
                 else
                 { // VALIDO
                     MV->VERSION = aux;
                     (*OK) = 1;
-                    if (MV->PARAM!=-1)
+                    if (MV->PARAM != -1)
                         setParamSegment(MV, argsc, args);
-                    setSegmentTable(MV,arch);
+                    setSegmentTable(MV, arch);
                     setCodeSegment(arch, MV);
                 }
             }
         }
-        else if (tipoParametro == ".vmi")
+        else if (strcmp(tipoParametro, ".vmi") == 0)
         {
-            i=0;
-            //printf("\n");
+            i = 0;
+            // printf("\n");
             fread(&aux, 1, 1, arch); // CONTROLO LOS CARACTERES "VMI25"
 
             while (i < 5 && aux - CONTROLVMI[i] == 0)
             {
-                //printf("%3c",aux);
+                // printf("%3c",aux);
                 i++;
                 fread(&aux, 1, 1, arch);
             }
@@ -434,16 +445,16 @@ void init_MV(tMV *MV, int *OK, int CONTROLVMX[],int CONTROLVMI[], int argsc, cha
             }
             else
             { // CONTROLO VERSION DE IMAGEN
-                 //printf("\n VERSION: %d \n\n", aux);
+              // printf("\n VERSION: %d \n\n", aux);
                 if (aux != 1)
                     printf("\n VERSION NO SOPORTADA!");
                 else
                 { // VALIDO
+                    (*OK) = 1;
                     MV->VERSION = aux;
-                    cargarimagen(MV,arch);
+                    cargarimagen(MV, arch);
                 }
             }
-
         }
 
         fclose(arch);

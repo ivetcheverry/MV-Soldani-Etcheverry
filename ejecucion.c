@@ -17,7 +17,6 @@ void ejecucion(tMV *MV){
     limsup = (MV->SEGMENTTABLE[base]&0xFFFF0000) >> 16;
     limsup += MV->SEGMENTTABLE[base]&0xFFFF;
 
-    MV->REGS[IP].dato = MV->ENTRYPOINT;
     ipvalor = getdireccionfisica(MV,MV->REGS[IP].dato);
 
     while(ipvalor<limsup && ipvalor>=liminf) {
@@ -54,10 +53,9 @@ void ejecucion(tMV *MV){
 
         if ( (aux >= 0 && aux<=8) || (aux>=11 && aux <= 31) ){
             if (MV->DISSASEMBLER) {
-                if (ipvalor == MV->ENTRYPOINT)
-                    printf(">");
-
-                printf("[%04X] %4s",ipvalor,( MV->FUNCIONES[aux]).nombre);
+                (ipvalor == MV->ENTRYPOINT)?printf(">"): printf(" ");
+                    
+                printf("[%04X]%6s",ipvalor,( MV->FUNCIONES[aux]).nombre);
 
                 if (aux >= 1 && aux <=7)
                     j = 1;
@@ -76,20 +74,19 @@ void ejecucion(tMV *MV){
                 printf("\n IP: %d", getdireccionfisica(MV,MV->REGS[IP].dato));
                 printf("\n OP2: %08x", MV->REGS[OP2].dato);
                 printf("\n");*/
-
-                    MV->FUNCIONES[aux].func(MV);
-
+                MV->FUNCIONES[aux].func(MV);
             }
-        }
+        }           
         else
             invalidfunction();
 
-        if (MV->UNPASO){
+        ipvalor = getdireccionfisica(MV,MV->REGS[IP].dato);
+
+        if (MV->UNPASO && ipvalor>liminf && ipvalor < limsup){
             MV->UNPASO=0;
             break;
         }
 
-        ipvalor = getdireccionfisica(MV,MV->REGS[IP].dato);
     }
 
 
