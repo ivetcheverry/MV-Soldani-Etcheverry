@@ -13,12 +13,15 @@ int getdireccionfisica(tMV *MV, int Puntero)
     int basePuntero = (Puntero >> 16 & 0xFFFF);
     int offsetPuntero = (Puntero & 0xFFFF);
     int pos;
-
-    pos = (MV->SEGMENTTABLE[basePuntero] >> 16) & 0xFFFF; // Obtengo el inicio
-    pos += offsetPuntero;
+    
+    if (basePuntero != 0XFFFF) {
+        pos = (MV->SEGMENTTABLE[basePuntero] >> 16) & 0xFFFF; // Obtengo el inicio
+        pos += offsetPuntero;
+    }
+    else
+    pos = -1;
 
     pos = analizarsigno(pos,2);
-
     return pos;
 }
 
@@ -33,18 +36,38 @@ int get_tipo_mem(int OP)
 
 void subrutinaprincipal(tMV *MV)
 {
-    MV->REGS[IP].dato = MV->ENTRYPOINT;
-    int ip_anterior = MV->REGS[IP].dato;
+    int ipaux;
+    int ipanterior = MV->REGS[IP].dato;
 
-    MV->REGS[OP2].dato = MV->REGS[PS].dato;
+    MV->REGS[OP2].dato = 0x01000000 + PS;
     push(MV);
-    MV->REGS[OP2].dato = MV->ARGC;
+    MV->REGS[OP2].dato = 0x02000000+ MV->ARGC;
     push(MV);
-    MV->REGS[OP2].dato = -1;
+    MV->REGS[IP].dato = -1;
+    MV->REGS[OP2].dato = 0x01000000+IP;
     push(MV);
 
-    MV->REGS[IP].dato = ip_anterior;
+    ipaux = ipanterior & 0xFFFF0000; // base ip.  0001 0000
+    ipaux |= MV->ENTRYPOINT;
+    MV->REGS[IP].dato = ipaux;
+    //printf("\n %08x", MV->REGS[IP].dato);
+    //printf("UBICACION DEL IP: %d",getdireccionfisica(MV, MV->REGS[IP].dato));
 }
+
+/*int generarOP(int valor, int tipo) {
+    int op;
+    if (tipo == 1) {
+        op = 0x01000000;
+        op |= valor;
+    }
+    else if (tipo == 3) {
+        op = 0x03000000;
+        op |= valor;
+    }
+
+
+    return op;
+}*/
 
 int analizarsigno(int valor, int cantbytes)
 {

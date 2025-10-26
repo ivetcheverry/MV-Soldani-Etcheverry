@@ -7,26 +7,38 @@
 int main(int argsc, char *args[])
 {
     tMV MV;
-    int CONTROLVMX[] = { 'V','M','X','2','5' };
-    int CONTROLVMI[] = { 'V','M','I','2','5' };
-    int OK=0;
-    //if (argsc>1) {
-        init_MV(&MV, &OK, CONTROLVMX, CONTROLVMI, argsc, args );
-        if (OK) {    //VALIDADO
+    int CONTROLVMX[] = {'V', 'M', 'X', '2', '5'};
+    int CONTROLVMI[] = {'V', 'M', 'I', '2', '5'};
+    int IPANTERIOR,i;
+    int OK = 0;
+  //  if (argsc > 1)
+   // {
+        init_MV(&MV, &OK, CONTROLVMX, CONTROLVMI, argsc, args);
+        if (OK)
+        { // VALIDADO
             init_regs(&MV);
             init_funciones(&MV);
             printf("\n");
-            MV.DISSASEMBLER=1;
-            if (MV.DISSASEMBLER){
+             MV.DISSASEMBLER=1;
+            if (MV.DISSASEMBLER)
+            {
+                IPANTERIOR = MV.REGS[IP].dato;
+                MV.REGS[IP].dato = MV.REGS[CS].dato;
                 ejecucion(&MV);
                 printf("\n");
-                MV.DISSASEMBLER=0;
+                MV.REGS[IP].dato = IPANTERIOR;
+                MV.DISSASEMBLER = 0;
             }
-            if (MV.VERSION==2)
+            if (MV.VERSION == 2)
                 subrutinaprincipal(&MV);
+
+            /*for (i=0; i<8;i++){
+                printf("%08x\n", MV.SEGMENTTABLE[i]);
+            }
+            printf("PS: %08x", MV.REGS[PS].dato);*/
             ejecucion(&MV);
         }
-    //}
+   // }
 
     printf("\n FIN DE PROCESO.");
     return 0;

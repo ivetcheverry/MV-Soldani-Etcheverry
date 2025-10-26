@@ -11,17 +11,15 @@ void mostrar(tMV *MV, int OP, int j)
     int tipo, r, off, tamano;
 
     tipo = OP >> 24;
-    char caracteres[] = {'b','w',' ','l'}, tamanochar;
+    char caracteres[] = {'b', 'w', ' ', 'l'}, tamanochar;
     char nombre[4];
-
-    
 
     if (tipo != 0)
     {
 
         if (tipo == MEMO)
         {
-            tamano = 3-((OP & 0x00FF0000) >> 22);
+            tamano = 3 - ((OP & 0x00FF0000) >> 22);
             tamanochar = caracteres[tamano];
             r = (OP >> 16) & 0x1F;
             off = OP & 0xFFFF;
@@ -30,20 +28,37 @@ void mostrar(tMV *MV, int OP, int j)
                 off = (off ^ NMASK16) - NMASK16;
 
             if (off != 0)
-                printf(" %c[%s%+d] ",tamanochar, MV->REGS[r].nombre, off);
+                printf(" %c[%s%+d] ", tamanochar, MV->REGS[r].nombre, off);
             else
-                printf(" %c[%s] ",tamanochar, MV->REGS[r].nombre);
+                printf(" %c[%s] ", tamanochar, MV->REGS[r].nombre);
         }
 
         else if (tipo == REG)
         {
-            tamano = (OP & 0b11000000)>>6;
+            tamano = (OP & 0b11000000) >> 6;
             r = OP & 0X1F;
-            switch (tamano) {
-                case 0: {strcpy(nombre,MV->REGS[r].nombre); break;}
-                case 1: {armaroperando(MV,r,'L',nombre); break;}
-                case 2: {armaroperando(MV,r,'H',nombre); break;}
-                case 3: {armaroperando(MV,r,'X',nombre); break;}
+            switch (tamano)
+            {
+            case 0:
+            {
+                strcpy(nombre, MV->REGS[r].nombre);
+                break;
+            }
+            case 1:
+            {
+                armaroperando(MV, r, 'L', nombre);
+                break;
+            }
+            case 2:
+            {
+                armaroperando(MV, r, 'H', nombre);
+                break;
+            }
+            case 3:
+            {
+                armaroperando(MV, r, 'X', nombre);
+                break;
+            }
             }
 
             printf(" %3s", nombre);
@@ -63,18 +78,18 @@ void mostrar(tMV *MV, int OP, int j)
     }
 }
 
-void armaroperando(tMV *MV, int reg, char letra, char *nombre) {
-    
-    nombre [2] = '\0';
-    nombre [0] = MV->REGS[reg].nombre[1];
-    nombre [1] = letra;
-}
+void armaroperando(tMV *MV, int reg, char letra, char *nombre)
+{
 
+    nombre[2] = '\0';
+    nombre[0] = MV->REGS[reg].nombre[1];
+    nombre[1] = letra;
+}
 
 // SIN OPERANDOS ------------------------------------------------------------
 void stop(tMV *MV)
 {
-    printf("\n\n STOP ejecutado. Deteniendo la máquina virtual.");
+    printf("\n\n STOP ejecutado. Deteniendo la maquina virtual.");
 
     MV->REGS[IP].dato = 0;
     MV->REGS[IP].dato |= 0XFFFF;
@@ -97,9 +112,6 @@ void sys(tMV *MV)
     char entrada;
 
     valor = 0;
-
-    acceso_mem(MV, MV->REGS[OP2].dato);
-
     funcion = get(MV, MV->REGS[OP2].dato);
     D = MV->REGS[EAX].dato & 0b1;
     C = MV->REGS[EAX].dato & 0b10;
@@ -114,6 +126,7 @@ void sys(tMV *MV)
 
     case 1:
     {
+        acceso_mem(MV, MV->REGS[OP2].dato);
         for (i = 0; i < cantidadceldas; i++)
         {
             printf("\n");
@@ -144,6 +157,7 @@ void sys(tMV *MV)
     }
     case 2:
     {
+        acceso_mem(MV, MV->REGS[OP2].dato);
         for (i = 0; i < cantidadceldas; i++)
         {
             printf("\n");
@@ -196,15 +210,20 @@ void sys(tMV *MV)
     }
     case 3: // string read
     {
-        printf("\n");
-        printf("[%04X]  ", MV->REGS[MAR].dato & 0XFFFF);
+        acceso_mem(MV, MV->REGS[OP2].dato);
 
         char buffer[512]; // limite razonable
         int len = 0;
+        int c;
+        while ((c = getchar()) != '\n' && c != EOF);
 
         fflush(stdout);
-        if (fgets(buffer, sizeof(buffer), stdin) == NULL)
-            return;
+
+        printf("\n");
+        printf("Ingresar cadena: ", MV->REGS[MAR].dato & 0XFFFF);
+        fgets(buffer, sizeof(buffer), stdin);
+
+        if (buffer != NULL){
 
         // Reemplazar '\n' por '\0'
         buffer[strcspn(buffer, "\n")] = '\0';
@@ -212,48 +231,50 @@ void sys(tMV *MV)
         // Máximo de caracteres a leer
         int max_len = MV->REGS[ECX].dato;
 
-        if (max_len == -1)
-            max_len = strlen(buffer);
-        else if (max_len > (int)strlen(buffer))
+        // Si no tiene limite (-1) o el limite supera al del buffer
+        if (max_len == -1 || (max_len > (int)strlen(buffer) )) 
             max_len = strlen(buffer);
 
-        // Obtener dirección lógica desde EDX
+        // Obtener dirección fisica desde EDX
         int seg_idx = (MV->REGS[EDX].dato >> 16) & 0xFFFF;
-        int offset = MV->REGS[EDX].dato & 0xFFFF;
+        int offset = MV->REGS[EDX].dato & 0xFFFF;   
 
-        // Validar segmento
-        if (seg_idx < 0 || seg_idx > (MV->REGS[SS].dato >> 16))
-            segmentationfault();
+        //Validar segmento
+            if (seg_idx < 0 || seg_idx > (MV->REGS[SS].dato >> 16))
+                   segmentationfault();
 
         // Dirección física real
-        int base_fisica = ((MV->SEGMENTTABLE[seg_idx] >> 16) & 0xFFFF) + offset;
+        int base_fisica = getdireccionfisica(MV,MV->REGS[EDX].dato);
 
         // Chequeo de overflow del segmento
         int seg_tam = MV->SEGMENTTABLE[seg_idx] & 0xFFFF;
         if ((offset + max_len + 1) > seg_tam)
             segmentationfault();
 
-        // Escribir en memoria byte a byte
-        fgets(buffer, max_len, stdin);
+        //printf("%s",buffer);
 
         setsys_buffer(MV, buffer, strlen(buffer));
 
+        }
         break;
     }
     case 4: // string write
     {
-
+        acceso_mem(MV, MV->REGS[OP2].dato);
         // Obtener dirección lógica desde EDX
+
         int seg_idx = (MV->REGS[EDX].dato >> 16) & 0xFFFF;
         int offset = MV->REGS[EDX].dato & 0xFFFF;
+
+
 
         // Validar segmento
         if (seg_idx < 0 || seg_idx > (MV->REGS[SS].dato >> 16))
             segmentationfault();
 
         // Dirección física base
-        int base_fisica = ((MV->SEGMENTTABLE[seg_idx] >> 16) & 0xFFFF) + offset;
-
+        int base_fisica = getdireccionfisica(MV,MV->REGS[EDX].dato);
+        
         // Tamaño del segmento
         int seg_tam = MV->SEGMENTTABLE[seg_idx] & 0xFFFF;
 
@@ -282,48 +303,53 @@ void sys(tMV *MV)
     }
     case 0xF:
     {
-        do{
-
-        printf("\nIngresar caracter: ");
-        scanf("%c",&entrada);
-        entrada = tolower(entrada);
-            if (entrada == 'g')
-                generarimagen(MV);
-            else if (entrada == '\n')
+        char * extension = strrchr(MV->NOMBREIMAGEN, '.');
+        if (extension &&  strcmp(extension, ".vmi")==0)
+        {
+            do
             {
-                opanterior = MV->REGS[OP2].dato;
-                generarimagen(MV);
-                MV->UNPASO = 1;
-                ejecucion(MV);
-                MV->REGS[OP2].dato = opanterior;
-                if (getdireccionfisica(MV,MV->REGS[IP].dato)!=-1)
-                    MV->FUNCIONES[SYS].func(MV);
-            }
-            else if (entrada == 'q')
-            {
-                generarimagen(MV);
-                MV->FUNCIONES[STOP].func(MV);
-            }
-            else
-                printf("CARACTER INVALIDO");
 
-        } while (entrada != 'g' && entrada != 'q' && entrada != '\n');
+                printf("\nIngresar caracter: ");
+                scanf("%c", &entrada);
+                entrada = tolower(entrada);
+                if (entrada == 'g')
+                    generarimagen(MV);
+                else if (entrada == '\n')
+                {
+                    opanterior = MV->REGS[OP2].dato;
+                    generarimagen(MV);
+                    MV->UNPASO = 1;
+                    ejecucion(MV);
+                    MV->REGS[OP2].dato = opanterior;
+                    if (getdireccionfisica(MV, MV->REGS[IP].dato) != -1)
+                        MV->FUNCIONES[SYS].func(MV);
+                }
+                else if (entrada == 'q')
+                {
+                    generarimagen(MV);
+                    MV->FUNCIONES[STOP].func(MV);
+                }
+                else
+                    printf("CARACTER INVALIDO");
 
-        break;
+            } while (entrada != 'g' && entrada != 'q' && entrada != '\n');
+
+            break;
+        }
     }
     }
 }
 
 void jmp(tMV *MV)
 {
-    MV->REGS[IP].dato = get(MV, MV->REGS[OP2].dato);
+    MV->REGS[IP].dato = (MV->REGS[IP].dato&0xFFFF0000) | get(MV, MV->REGS[OP2].dato);
 }
 
 void jz(tMV *MV)
 {
     int Z = (MV->REGS[CC].dato >> 30) & 0b1;
     if (Z & 1)
-        MV->REGS[IP].dato = get(MV, MV->REGS[OP2].dato);
+        MV->REGS[IP].dato = (MV->REGS[IP].dato&0xFFFF0000) | get(MV, MV->REGS[OP2].dato);
 }
 
 void jnz(tMV *MV)
@@ -331,21 +357,21 @@ void jnz(tMV *MV)
     int Z = ((MV->REGS[CC].dato >> 30) & 1);
 
     if (!(Z & 1))
-        MV->REGS[IP].dato = get(MV, MV->REGS[OP2].dato);
+        MV->REGS[IP].dato = (MV->REGS[IP].dato&0xFFFF0000) | get(MV, MV->REGS[OP2].dato);
 }
 
 void jn_(tMV *MV)
 {
     int N = (MV->REGS[CC].dato >> 31) & 0b1;
     if (N & 1)
-        MV->REGS[IP].dato = get(MV, MV->REGS[OP2].dato);
+        MV->REGS[IP].dato =  (MV->REGS[IP].dato&0xFFFF0000) |get(MV, MV->REGS[OP2].dato);
 }
 
 void jnn(tMV *MV)
 {
     int N = (MV->REGS[CC].dato >> 31) & 0b1;
     if (!(N & 1))
-        MV->REGS[IP].dato = get(MV, MV->REGS[OP2].dato);
+        MV->REGS[IP].dato = (MV->REGS[IP].dato&0xFFFF0000) | get(MV, MV->REGS[OP2].dato);
 }
 
 void jp(tMV *MV)
@@ -353,7 +379,7 @@ void jp(tMV *MV)
     int N = (MV->REGS[CC].dato >> 31) & 0b1;
     int Z = ((MV->REGS[CC].dato >> 30) & 1);
     if (!(N & 1) && !(Z & 1))
-        MV->REGS[IP].dato = get(MV, MV->REGS[OP2].dato);
+        MV->REGS[IP].dato =  (MV->REGS[IP].dato&0xFFFF0000) |get(MV, MV->REGS[OP2].dato);
 }
 
 void jnp(tMV *MV)
@@ -361,12 +387,12 @@ void jnp(tMV *MV)
     int N, Z;
     N = (MV->REGS[CC].dato >> 31) & 0b1;
     if (N & 1)
-        MV->REGS[IP].dato = get(MV, MV->REGS[OP2].dato);
+        MV->REGS[IP].dato = (MV->REGS[IP].dato&0xFFFF0000) | get(MV, MV->REGS[OP2].dato);
     else
     {
         Z = (MV->REGS[CC].dato >> 30) & 0b1;
         if (Z & 1)
-            MV->REGS[IP].dato = get(MV, MV->REGS[OP2].dato);
+            MV->REGS[IP].dato = (MV->REGS[IP].dato&0xFFFF0000) |get(MV, MV->REGS[OP2].dato);
     }
 }
 
@@ -389,7 +415,6 @@ void pop(tMV *MV)
     int valor = 0;
     int i;
 
-
     int base = (MV->REGS[SS].dato & 0xFFFF0000) >> 16;
     int ss_inicio = getdireccionfisica(MV, MV->REGS[SS].dato);
     int ss_tamano = MV->SEGMENTTABLE[base] & 0xFFFF;
@@ -405,15 +430,15 @@ void pop(tMV *MV)
     }
     else
     {
-        for (i = posSP+1; cant_bytes > 0; cant_bytes--)
+        for (i = posSP + 1; cant_bytes > 0; cant_bytes--)
         {
             valor = (valor << 8) | (MV->MEMORIA[i]);
             i++;
         }
 
-    set(MV, MV->REGS[OP2].dato, valor);
+        set(MV, MV->REGS[OP2].dato, valor);
 
-    MV->REGS[SP].dato += 4;
+        MV->REGS[SP].dato += 4;
     }
 }
 
@@ -443,7 +468,7 @@ void push(tMV *MV)
     else
     {
         // Obtener valor del operando
-        valorNuevo = get(MV, MV->REGS[OP2].dato); //  -> 5
+        valorNuevo = get(MV, MV->REGS[OP2].dato);
         // Extender signo a 32 bits si es 16 bits con signo
         if (valorNuevo & 0x8000)
             valorNuevo |= 0xFFFF0000;
