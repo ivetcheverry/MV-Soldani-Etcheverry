@@ -11,19 +11,21 @@ int main(int argsc, char *args[])
     int CONTROLVMI[] = {'V', 'M', 'I', '2', '5'};
     int IPANTERIOR,i;
     int OK = 0;
-  //  if (argsc > 1)
-   // {
+    if (argsc > 1)
+    {
         init_MV(&MV, &OK, CONTROLVMX, CONTROLVMI, argsc, args);
         if (OK)
         { // VALIDADO
             init_regs(&MV);
             init_funciones(&MV);
             printf("\n");
-             MV.DISSASEMBLER=1;
+             //MV.DISSASEMBLER=1;
             if (MV.DISSASEMBLER)
             {
                 IPANTERIOR = MV.REGS[IP].dato;
-                MV.REGS[IP].dato = MV.REGS[CS].dato;
+                if (MV.REGS[KS].dato > 0)
+                    mostrarConstantes(&MV);     
+                MV.REGS[IP].dato = MV.REGS[CS].dato; 
                 ejecucion(&MV);
                 printf("\n");
                 MV.REGS[IP].dato = IPANTERIOR;
@@ -38,7 +40,7 @@ int main(int argsc, char *args[])
             printf("PS: %08x", MV.REGS[PS].dato);*/
             ejecucion(&MV);
         }
-   // }
+   }
 
     printf("\n FIN DE PROCESO.");
     return 0;

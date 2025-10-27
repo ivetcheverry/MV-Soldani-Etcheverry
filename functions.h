@@ -3,7 +3,8 @@
 #include <stdint.h>
 #include "const.h"
 
-
+void mostrarConstantes(tMV *MV);
+void mostrarhexa(int datos[], int cant);
 void mostrar(tMV *MV, int OP, int j);
 void init_MV(tMV *MV, int *OK, int CONTROLVMX[],int CONTROLVMI[], int argsc, char *args[]);
 
@@ -17,6 +18,7 @@ void subrutinaprincipal(tMV *);
 void setParamSegment(tMV *MV, int argsc, char *args[]);
 void setSegmentTable(tMV *MV, FILE *arch);
 void setCodeSegment(FILE *arch,tMV *MV);
+void setConstSegment(FILE *arch,tMV *MV);
 
 
 int getdireccionfisica(tMV *MV, int Puntero);

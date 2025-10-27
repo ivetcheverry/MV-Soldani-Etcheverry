@@ -130,6 +130,30 @@ void setCodeSegment(FILE *arch, tMV *MV)
     }
 }
 
+void setConstSegment(FILE *arch,tMV *MV) {
+        
+    int i, aux, liminf, limsup, base;
+
+    base = (MV->REGS[KS].dato & 0xFFFF0000) >> 16;
+    liminf = (MV->SEGMENTTABLE[base] & 0xFFFF0000) >> 16;
+    limsup = (MV->SEGMENTTABLE[base] & 0xFFFF0000) >> 16;
+    limsup += MV->SEGMENTTABLE[base] & 0xFFFF;
+
+    for (i = liminf; i < limsup; i++)
+    {
+        fread(&aux, 1, 1, arch);
+
+        /*printf("%3c",aux);
+        if (i>0 && i%15 == 0)       //escribe lo que lee del .vmx
+            printf("\n");*/
+
+        MV->MEMORIA[i] = aux;
+    }
+
+}
+
+
+
 void addsegmento(tMV *MV, int inicio, int tamano, int pos)
 {
     /*
@@ -432,6 +456,8 @@ void init_MV(tMV *MV, int *OK, int CONTROLVMX[], int CONTROLVMI[], int argsc, ch
                         setParamSegment(MV, argsc, args);
                     setSegmentTable(MV, arch);
                     setCodeSegment(arch, MV);
+                    if (MV->REGS[KS].dato > 0) 
+                        setConstSegment(arch,MV);
                 }
             }
         }

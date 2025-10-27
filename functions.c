@@ -78,6 +78,55 @@ void mostrar(tMV *MV, int OP, int j)
     }
 }
 
+void mostrarConstantes(tMV *MV) {
+    int i,j, aux, liminf, limsup, base;
+    int cant_caracteres;
+    char cadena[100];
+
+    base = (MV->REGS[KS].dato & 0xFFFF0000) >> 16;
+    liminf = (MV->SEGMENTTABLE[base] & 0xFFFF0000) >> 16;
+    limsup = (MV->SEGMENTTABLE[base] & 0xFFFF0000) >> 16;
+    limsup += MV->SEGMENTTABLE[base] & 0xFFFF;
+
+    i=liminf;
+    while (i< limsup)
+    {
+        j=0;
+        printf(" [%04X] ",i);
+        while (MV->MEMORIA[i] != '\0') {
+            if (j<6)
+                printf("%2x ", MV->MEMORIA[i]);
+            else if (j==6) 
+                printf("..");
+            cadena[j] = MV->MEMORIA[i];
+            j++;
+            i++;
+        }
+        cadena[j] = '\0';
+        printf("  \"%s\" \n",cadena);
+        i++;
+    }
+}
+
+void mostrarhexa(int datos[],int cant){
+    int lenlinea=7;
+    int i;
+
+    for (i=0; i<lenlinea; i++){
+        if (i<cant)
+            printf(" %02x", datos[i]);
+        else
+            printf("   ");
+    }
+
+    printf(" | ");
+
+
+
+
+}
+
+
 void armaroperando(tMV *MV, int reg, char letra, char *nombre)
 {
 

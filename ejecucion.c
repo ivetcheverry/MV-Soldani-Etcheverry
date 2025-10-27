@@ -5,11 +5,12 @@
 
 void ejecucion(tMV *MV){
 
-    int top1, top2, opcod, i,j, ipvalor, valor;
+    int top1, top2, opcod, i,j, ipvalor, valor,datos_index;
 
-    int instrucciones_ejecutadas=0;
     int limsup,liminf;
     int base;
+
+    int datos[8];
 
     base = (MV->REGS[IP].dato & 0xFFFF0000)>>16;
 
@@ -21,8 +22,16 @@ void ejecucion(tMV *MV){
     ipvalor = getdireccionfisica(MV,MV->REGS[IP].dato);
 
     while(ipvalor<limsup && ipvalor>=liminf) {
-        
+        datos_index=0;
+
+        if (MV->DISSASEMBLER){
+            (ipvalor == getdireccionfisica(MV, MV->REGS[CS].dato+MV->ENTRYPOINT))?printf(">"): printf(" ");
+            printf("[%04X]",ipvalor);
+        }
+
         valor=MV->MEMORIA[ipvalor];
+        datos[datos_index++]=valor;
+
         MV->REGS[OP2].dato=MV->REGS[OP1].dato=0;
 
 //      printf("\n\nSIGUIENTE INSTRUCCION:%5x \n",valor);
@@ -36,17 +45,18 @@ void ejecucion(tMV *MV){
                 (MV->REGS[OP2].dato)=(MV->REGS[OP2].dato<<8);
                 MV->REGS[IP].dato+=1;
                 valor=MV->MEMORIA[getdireccionfisica(MV,MV->REGS[IP].dato)];
+                datos[datos_index++]=valor;
                 MV->REGS[OP2].dato|=valor;
 
             }
             MV->REGS[OP2].dato |= (top2<<24);
 
             for ( i=0; i < top1; i++) {
-
                 (MV->REGS[OP1].dato)=(MV->REGS[OP1].dato<<8);
                 MV->REGS[IP].dato+=1;
                 int direc = getdireccionfisica(MV,MV->REGS[IP].dato);
                 valor=MV->MEMORIA[direc];
+                datos[datos_index++]=valor;
                 MV->REGS[OP1].dato|=valor;
             }
             MV->REGS[OP1].dato |= (top1<<24);
@@ -56,27 +66,20 @@ void ejecucion(tMV *MV){
 
         if ( (aux >= 0 && aux<=8) || (aux>=11 && aux <= 31) ){
             if (MV->DISSASEMBLER) {
-                (ipvalor == getdireccionfisica(MV, MV->REGS[CS].dato+MV->ENTRYPOINT))?printf(">"): printf(" ");
-                    
-                printf("[%04X]%6s",ipvalor,( MV->FUNCIONES[aux]).nombre);
+                //(ipvalor == getdireccionfisica(MV, MV->REGS[CS].dato+MV->ENTRYPOINT))?printf(">"): printf(" ");
+                //printf("[%04X]%6s",ipvalor,( MV->FUNCIONES[aux]).nombre);
+
+                mostrarhexa(datos, datos_index);
 
                 if (aux >= 1 && aux <=7)
                     j = 1;
                 else
                     j=0;
-
+                printf("%6s",( MV->FUNCIONES[aux]).nombre);
                 mostrar(MV,MV->REGS[OP1].dato,j);
                 mostrar(MV,MV->REGS[OP2].dato,j);
                 printf("\n");
              } else{
-              /*  printf("\nSS: %d", getdireccionfisica(MV,MV->REGS[SS].dato));
-                printf("\nBP: %d", getdireccionfisica(MV,MV->REGS[BP].dato));
-                printf("\nSP: %d", getdireccionfisica(MV,MV->REGS[SP].dato));
-                printf("\nEDX: %08x", MV->REGS[EDX].dato);
-                printf("\nECX: %08x", MV->REGS[ECX].dato);
-                printf("\n IP: %d", getdireccionfisica(MV,MV->REGS[IP].dato));
-                printf("\n OP2: %08x", MV->REGS[OP2].dato);
-                printf("\n");*/
                 MV->FUNCIONES[aux].func(MV);
             }
         }           
@@ -90,9 +93,6 @@ void ejecucion(tMV *MV){
             break;
         }
 
-        instrucciones_ejecutadas++;
-       // printf("\n Instruccion (aux): %d",aux);
-        //printf("\n instrucciones ejecutadas: %d", instrucciones_ejecutadas);
 
     }
 
