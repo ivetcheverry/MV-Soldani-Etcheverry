@@ -19,11 +19,11 @@ int main(int argsc, char *args[])
             init_regs(&MV);
             init_funciones(&MV);
             printf("\n");
-             //MV.DISSASEMBLER=1;
-            if (MV.DISSASEMBLER)
+            //MV.DISSASEMBLER=1;
+          if (MV.DISSASEMBLER)
             {
                 IPANTERIOR = MV.REGS[IP].dato;
-                if (MV.REGS[KS].dato > 0)
+                if (MV.REGS[KS].dato >= 0)
                     mostrarConstantes(&MV);     
                 MV.REGS[IP].dato = MV.REGS[CS].dato; 
                 ejecucion(&MV);
@@ -31,13 +31,15 @@ int main(int argsc, char *args[])
                 MV.REGS[IP].dato = IPANTERIOR;
                 MV.DISSASEMBLER = 0;
             }
-            if (MV.VERSION == 2)
-                subrutinaprincipal(&MV);
+           
 
-            /*for (i=0; i<8;i++){
+/*          for (i=0; i<8;i++){
                 printf("%08x\n", MV.SEGMENTTABLE[i]);
             }
-            printf("PS: %08x", MV.REGS[PS].dato);*/
+            printf("PS: %08x", MV.REGS[PS].dato);
+*/
+            if (MV.VERSION == 2)
+                subrutinaprincipal(&MV);
             ejecucion(&MV);
         }
    }

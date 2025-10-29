@@ -10,7 +10,7 @@ ARCHIVO PARA GUARDAR FUNCIONES ESPECIFICOS DE LOS ACCESOS A MEMORIA
 
 void acceso_mem(tMV *MV, int OP)
 {
-    int offset = 0, regcod, base, sys = 0;
+    int offset = 0, regcod, base,baseMAR, sys = 0;
     int cantbytes = 0;
     int inicio = 0;
     int base_segmento, size_segmento;
@@ -33,19 +33,19 @@ void acceso_mem(tMV *MV, int OP)
     MV->REGS[LAR].dato = MV->REGS[LAR].dato << 16;
     MV->REGS[LAR].dato |= ((offset + (MV->REGS[regcod].dato & 0XFFFF)) & 0xffff);
 
-    // printf("%08x",MV->REGS[LAR].dato);
+    //printf("LAR: %08x\n",MV->REGS[LAR].dato);
     if (sys)
         MV->REGS[MAR].dato = (MV->REGS[ECX].dato & 0XFFFF0000) >> 16;
     else
         MV->REGS[MAR].dato = 0x0 | get_tipo_mem(OP); // obtengo cantidad de bytes a escribir/leer en memoria
 
-    // printf("%08x",MV->REGS[MAR].dato);
+    
 
     MV->REGS[MAR].dato = MV->REGS[MAR].dato << 16;
 
     MV->REGS[MAR].dato |= getdireccionfisica(MV, MV->REGS[LAR].dato);
 
-    // printf("%08x",MV->REGS[MAR].dato);
+    //printf("MAR: %08x \n",MV->REGS[MAR].dato);
 
     cantbytes = ((MV->REGS[MAR].dato & 0xFFFF0000) >> 16);
     inicio = ((MV->REGS[MAR].dato & 0xFFFF));
@@ -57,13 +57,13 @@ void acceso_mem(tMV *MV, int OP)
     */
 
     
-        if (base != MV->REGS[SS].dato >> 16)
-        {
-            if (inicio + cantbytes >= (MV->SEGMENTTABLE[base] & 0xFFFF) + ((MV->SEGMENTTABLE[base] >> 16) & 0xFFFF))
+// if (base != MV->REGS[SS].dato >> 16)
+        
+            if (inicio + cantbytes - 1>= (MV->SEGMENTTABLE[base] & 0xFFFF) + ((MV->SEGMENTTABLE[base] >> 16) & 0xFFFF))
                 segmentationfault();
             else if (inicio < ((MV->SEGMENTTABLE[base] >> 16) & 0xFFFF))
                 segmentationfault();
-        }
+        
     
 }
 

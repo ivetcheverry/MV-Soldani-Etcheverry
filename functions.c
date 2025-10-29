@@ -309,13 +309,13 @@ void sys(tMV *MV)
     }
     case 4: // string write
     {
-        acceso_mem(MV, MV->REGS[OP2].dato);
+        int ecx_anterior = MV->REGS[ECX].dato;
         // Obtener dirección lógica desde EDX
 
         int seg_idx = (MV->REGS[EDX].dato >> 16) & 0xFFFF;
         int offset = MV->REGS[EDX].dato & 0xFFFF;
 
-
+        int posicion = getdireccionfisica(MV,MV->REGS[EDX].dato);
 
         // Validar segmento
         if (seg_idx < 0 || seg_idx > (MV->REGS[SS].dato >> 16))
@@ -331,15 +331,25 @@ void sys(tMV *MV)
         char buffer[512];
         getsys_buffer(MV, buffer, base_fisica, seg_tam - offset);
 
+        int longitud_cadena = strlen(buffer);
+        MV->REGS[ECX].dato = longitud_cadena<<16;
+        MV->REGS[ECX].dato |= 0x0001;
+
+        acceso_mem(MV, MV->REGS[OP2].dato);
+
         // Imprimir
         printf("\n");
-        printf("%s", buffer);
+        printf("%s \n", buffer);
 
         // Actualizar MBR con último carácter leído
         if (strlen(buffer) > 0)
             MV->REGS[MBR].dato = (unsigned char)buffer[strlen(buffer) - 1];
         else
             MV->REGS[MBR].dato = 0;
+
+        
+
+        MV->REGS[ECX].dato = ecx_anterior;
 
         break;
     }
@@ -479,7 +489,7 @@ void pop(tMV *MV)
     }
     else
     {
-        for (i = posSP + 1; cant_bytes > 0; cant_bytes--)
+        for (i = posSP; cant_bytes > 0; cant_bytes--)
         {
             valor = (valor << 8) | (MV->MEMORIA[i]);
             i++;
@@ -522,7 +532,7 @@ void push(tMV *MV)
         if (valorNuevo & 0x8000)
             valorNuevo |= 0xFFFF0000;
 
-        for (i = posSP + 4; cant_bytes > 0; cant_bytes--)
+        for (i = posSP + 3; cant_bytes > 0; cant_bytes--)
         {
             MV->MEMORIA[i] = valorNuevo & 0xFF;
             valorNuevo = valorNuevo >> 8;

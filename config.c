@@ -106,6 +106,8 @@ void init_regs(tMV *MV)
     strcpy(MV->REGS[SS].nombre, "SS");
     strcpy(MV->REGS[KS].nombre, "KS");
     strcpy(MV->REGS[PS].nombre, "PS");
+
+    MV->REGS[ECX].dato = -1;
 }
 
 void setCodeSegment(FILE *arch, tMV *MV)
@@ -169,6 +171,8 @@ void addsegmento(tMV *MV, int inicio, int tamano, int pos)
     }
     else
         memoria_insuficiente();
+
+    printf("base: %d\t %08x \t Inicio = %d \t Inicio + tamano: %d \n",pos, MV->SEGMENTTABLE[pos],inicio,posicion_memoria);
 }
 
 void setSegmentTable(tMV *MV, FILE *arch)
@@ -202,10 +206,10 @@ void setSegmentTable(tMV *MV, FILE *arch)
         aux = 0;
         fread(&aux, 1, 1, arch);
         // printf("%x",aux);
-        tamano = aux;
+        tamano = aux<<8;
         fread(&aux, 1, 1, arch);
         // printf("%x",aux);
-        tamano += aux;
+        tamano |= aux;
 
         addsegmento(MV, inicio, tamano, pos);
         MV->REGS[IP].dato = MV->REGS[CS].dato = pos << 16;
@@ -235,7 +239,7 @@ void setSegmentTable(tMV *MV, FILE *arch)
             fread(&aux, 1, 1, arch);
             MV->REGS[indice].dato = aux << 8;
             fread(&aux, 1, 1, arch);
-            MV->REGS[indice].dato += aux;
+            MV->REGS[indice].dato |= aux;
 
             //printf("\n %S : %d ", MV->REGS[indice].nombre, MV->REGS[indice].dato);
         }
@@ -265,10 +269,11 @@ void setSegmentTable(tMV *MV, FILE *arch)
         int base = (MV->REGS[SS].dato & 0xFFFF0000) >> 16;
         int ss_tamano = MV->SEGMENTTABLE[base] & 0xFFFF;
 
-        MV->REGS[SP].dato = (base << 16) | tamano;
-
-        MV->REGS[BP].dato = MV->REGS[SP].dato;
-        // printf("VALOR SP EN MEMORIA: %d \n", getdireccionfisica(MV,MV->REGS[SP].dato));
+        MV->REGS[SP].dato = (base << 16) | ss_tamano;
+        //printf("SP %08x\n", MV->REGS[SP].dato);
+        //MV->REGS[BP].dato = MV->REGS[SP].dato;
+        
+        //printf("VALOR SP EN MEMORIA: %d \n", getdireccionfisica(MV,MV->REGS[SP].dato));
 
         MV->REGS[IP].dato = MV->REGS[CS].dato + MV->ENTRYPOINT;
     }
@@ -328,7 +333,12 @@ void setParamSegment(tMV *MV, int argsc, char *args[])
         i++;
     }
     i--;
-    addsegmento(MV, 0, i, 0);
+    addsegmento(MV, 0, i+1, 0);
+
+
+    /*for (w=0; w<i+1; w++){
+        printf("%08x  %d\n", MV->MEMORIA[w], MV->MEMORIA[w]);
+    }*/
 }
 
 void generarimagen(tMV *MV)
@@ -456,7 +466,7 @@ void init_MV(tMV *MV, int *OK, int CONTROLVMX[], int CONTROLVMI[], int argsc, ch
                         setParamSegment(MV, argsc, args);
                     setSegmentTable(MV, arch);
                     setCodeSegment(arch, MV);
-                    if (MV->REGS[KS].dato > 0) 
+                    if (MV->REGS[KS].dato >= 0) 
                         setConstSegment(arch,MV);
                 }
             }
