@@ -75,7 +75,7 @@ int getsys(tMV *MV)
     cantbytes = ((MV->REGS[MAR].dato & 0xFFFF0000) >> 16);
     inicio = ((MV->REGS[MAR].dato & 0xFFFF));
 
-    for (i = inicio + 1; cantbytes > 0; cantbytes--)
+    for (i = inicio ; cantbytes > 0; cantbytes--)
     {
         valor = valor << 8 | MV->MEMORIA[i];
         i++;
@@ -113,7 +113,7 @@ void setsys(tMV *MV, int valorNuevo)
 
     MV->REGS[MBR].dato = valorNuevo;
 
-    for (i = inicio + cantbytes; cantbytes > 0; cantbytes--)
+    for (i = inicio + cantbytes -1; cantbytes > 0; cantbytes--)
     {
         MV->MEMORIA[i] = valorNuevo & 0xFF;
         valorNuevo = valorNuevo >> 8;

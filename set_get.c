@@ -8,12 +8,13 @@ int get(tMV *MV, int OP) {
     int tipo,valor=0,mask, byte_index, i;
     int regcod, offset;
     int opreg;
-    int inicio,cantbytes;
+    int inicio,cantbytes,longitud;
 
     tipo = OP>>24;
 
     if (tipo==INM){
-        valor = analizarsigno(OP & 0XFFFF,2);
+        longitud = 2;
+        valor = analizarsigno(OP & 0XFFFF,longitud);
         
     }else if (tipo==REG){
         regcod= OP & 0x1F;  
@@ -22,18 +23,22 @@ int get(tMV *MV, int OP) {
         opreg = (OP & 0b11000000)>>6;
         switch (opreg) {
             case 0b11: //AX
+                longitud = 2;
                 valor=valor & 0xFFFF;
                 break;
 
-            case 0b10: // AH                             
+            case 0b10: // AH  
+                longitud = 1;                           
                 valor=(valor & 0xFF00)>>8;        
                 break;
 
             case 0b01:  // AL
+                longitud = 1;  
                 valor=valor & 0xFF;          
                 break;
 
             default:   // EAX
+            longitud = 4;  
                 break;
         }
 
@@ -43,6 +48,7 @@ int get(tMV *MV, int OP) {
 
         cantbytes = ((MV->REGS[MAR].dato & 0xFFFF0000)>>16);
         inicio= ((MV->REGS[MAR].dato & 0xFFFF));
+        longitud = cantbytes; 
 
         for (i = inicio ; cantbytes>0; cantbytes--) {
             valor = (valor<<8) |(MV->MEMORIA[i]);
@@ -54,7 +60,7 @@ int get(tMV *MV, int OP) {
         MV->REGS[MBR].dato = valor;
     }
 
-    return valor;
+    return analizarsigno(valor,longitud);
 
 }
 

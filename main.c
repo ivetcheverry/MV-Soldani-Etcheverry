@@ -20,7 +20,7 @@ int main(int argsc, char *args[])
             init_funciones(&MV);
             printf("\n");
             //MV.DISSASEMBLER=1;
-          if (MV.DISSASEMBLER)
+         if (MV.DISSASEMBLER)
             {
                 IPANTERIOR = MV.REGS[IP].dato;
                 if (MV.REGS[KS].dato >= 0)
@@ -31,7 +31,7 @@ int main(int argsc, char *args[])
                 MV.REGS[IP].dato = IPANTERIOR;
                 MV.DISSASEMBLER = 0;
             }
-           
+         
 
 /*          for (i=0; i<8;i++){
                 printf("%08x\n", MV.SEGMENTTABLE[i]);

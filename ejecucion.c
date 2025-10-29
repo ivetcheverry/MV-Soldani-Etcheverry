@@ -83,7 +83,7 @@ void ejecucion(tMV *MV){
                 //printf("BP: %08x \n", MV->REGS[BP].dato);
                 //int fin_stack = MV->SEGMENTTABLE[4]>>16 + MV->SEGMENTTABLE[4]&0xFFFF;
                 //printf("INDICE FIN STACK: %d \n",fin_stack);
-                //printf("EDX: %08x \n", MV->REGS[EDX].dato);
+                //printf("EDX: %d \n", MV->REGS[EDX].dato&0xFFFF);
                 //printf("OP2: %08x \n", MV->REGS[OP2].dato);
                 //printf("ip valor: %04x \n", ipvalor);
                 MV->FUNCIONES[aux].func(MV);

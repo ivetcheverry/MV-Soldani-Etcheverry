@@ -259,8 +259,8 @@ void sys(tMV *MV)
     }
     case 3: // string read
     {
-        acceso_mem(MV, MV->REGS[OP2].dato);
-
+        
+        int ecx_anterior = MV->REGS[ECX].dato;
         char buffer[512]; // limite razonable
         int len = 0;
         int c;
@@ -268,8 +268,6 @@ void sys(tMV *MV)
 
         fflush(stdout);
 
-        printf("\n");
-        printf("Ingresar cadena: ", MV->REGS[MAR].dato & 0XFFFF);
         fgets(buffer, sizeof(buffer), stdin);
 
         if (buffer != NULL){
@@ -302,9 +300,17 @@ void sys(tMV *MV)
 
         //printf("%s",buffer);
 
-        setsys_buffer(MV, buffer, strlen(buffer));
+        int longitud_cadena = strlen(buffer);
+        MV->REGS[ECX].dato = longitud_cadena<<16;
+        MV->REGS[ECX].dato |= 0x0001;
 
+        acceso_mem(MV, MV->REGS[OP2].dato);
+
+        setsys_buffer(MV, buffer, strlen(buffer));
+        
         }
+        MV->REGS[ECX].dato = ecx_anterior;
+
         break;
     }
     case 4: // string write

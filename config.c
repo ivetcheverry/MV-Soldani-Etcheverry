@@ -374,28 +374,58 @@ void generarimagen(tMV *MV)
 
 void cargarimagen(tMV *MV, FILE *arch)
 {
-    int aux = 0, i;
-    int regsaux[32], tablaaux[8];
+    int aux = 0, i,j, regaux;
+    int tablaaux;
 
-    fread(&aux, 2, 1, arch);
+    i=0;
+    /*while (!feof(arch)){
+        fread(&aux,1,1,arch);
+        printf("0x ", aux);
+        i++;
+        if (i % 12 == 0)
+            printf("\n");
+
+    }*/
+
+// Lectura de la memoria en kib, luego multiplico por 1024 para la cant de bytes.
+    fread(&aux, 1, 1, arch);
     MV->MEM = aux;
+    fread(&aux, 1, 1, arch);
+    MV->MEM += aux;
+    MV->MEM *= 1024; 
 
-    fread(regsaux, 4, 32, arch);
-
-
-
-    for (i = 0; i < 32; i++)
-        MV->REGS[i].dato = regsaux[i];
-        //printf("\n %d:  %08x",i, regsaux[i]);
+    for (i=0; i<32; i++){
+        regaux=0;
+        fread(&aux, 1, 1, arch);
+        regaux = aux;
+        for (j=0; j<3; j++){
+            fread(&aux, 1, 1, arch);
+            regaux = (regaux <<8)| aux;
+        }
+        MV->REGS[i].dato = regaux;
+    }
+    
 
     MV->ENTRYPOINT = MV->REGS[IP].dato & 0xFFFF;
 
-    fread(tablaaux, 4, 8, arch);
+    for (i=0; i<8; i++){
+        tablaaux=0;
+        fread(&aux, 1, 1, arch);
+        tablaaux = aux;
+        for (j=0; j<3; j++){
+            fread(&aux, 1, 1, arch);
+            tablaaux = (tablaaux <<8)| aux;
+        }
+        MV->SEGMENTTABLE[i] = tablaaux;
+    }
 
-    for (i = 0; i < 8; i++)
-        MV->SEGMENTTABLE[i] = tablaaux[i];
-
-    fread(MV->MEMORIA, 1, MV->MEM, arch);
+    i=0;
+    while (!feof(arch)){
+         fread(&MV->MEMORIA[i], 1, 1, arch);
+         //printf("%x  ", MV->MEMORIA[i]);
+         i++;
+    }
+   
 }
 
 void init_MV(tMV *MV, int *OK, int CONTROLVMX[], int CONTROLVMI[], int argsc, char *args[])
