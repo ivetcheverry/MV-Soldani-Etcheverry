@@ -40,7 +40,7 @@ int main(int argsc, char *args[])
 */
             if (MV.VERSION == 2)
                 subrutinaprincipal(&MV);
-            ejecucion(&MV);
+                ejecucion(&MV);
         }
    }
 

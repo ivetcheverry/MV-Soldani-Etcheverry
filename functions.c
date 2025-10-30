@@ -106,6 +106,8 @@ void mostrarConstantes(tMV *MV) {
         printf("  \"%s\" \n",cadena);
         i++;
     }
+
+    printf("\n");
 }
 
 void mostrarhexa(int datos[],int cant){
@@ -264,10 +266,7 @@ void sys(tMV *MV)
         char buffer[512]; // limite razonable
         int len = 0;
         int c;
-        while ((c = getchar()) != '\n' && c != EOF);
-
         fflush(stdout);
-
         fgets(buffer, sizeof(buffer), stdin);
 
         if (buffer != NULL){
